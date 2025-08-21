@@ -1,0 +1,4 @@
+type Cash = f64
+type Entity = f64
+enum Rarity = {Common, Rare, Epic, Legendary, Mythic, Secret}
+enum Mutation = {Normal, Gold, Diamond, Rainbow, Huge}

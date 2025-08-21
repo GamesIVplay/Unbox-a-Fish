@@ -1,6 +1,6 @@
 {
-    "name": "Tap-and-Bait-a-Brainrot",
-    "servePlaceIds": [77234126504433],
+    "name": "Unbox-a-Fish",
+    "servePlaceIds": [75967434295719],
     "emitLegacyScripts": false,
     "tree": {
         "$className": "DataModel",

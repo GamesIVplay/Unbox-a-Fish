@@ -1,0 +1,13 @@
+option ClientOutput = "../../network/Client.luau"
+option ServerOutput = "../../network/Server.luau"
+option Casing = Pascal
+option UsePolling = true
+
+import "./Types.blink" as Types
+
+event ClientLoaded {
+    From: Client,
+    Type: Reliable,
+    Call: SingleSync
+}
+
