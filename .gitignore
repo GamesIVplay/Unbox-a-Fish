@@ -1,0 +1,12 @@
+sourcemap.json
+Packages/
+**/*.rbxl
+roblox.yml
+roblox.toml
+globalTypes.d.lua
+TODO.md
+
+**/sourcemap.json
+dist/
+/*.rbxlx.lock
+/*.rbxl.lock

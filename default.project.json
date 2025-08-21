@@ -1,0 +1,35 @@
+{
+    "name": "Tap-and-Bait-a-Brainrot",
+    "servePlaceIds": [77234126504433],
+    "emitLegacyScripts": false,
+    "tree": {
+        "$className": "DataModel",
+
+        "ReplicatedStorage": {
+            "Common": {
+                "$path": "src/Common"
+            },
+            "Packages": {
+                "$path": "Packages"
+            }
+        },
+
+        "ServerScriptService": {
+            "Server": {
+                "$path": "src/Server"
+            },
+            "Network": {
+                "$path": "network/Server.luau"
+            }
+        },
+
+        "ReplicatedFirst": {
+            "Client": {
+                "$path": "src/Client"
+            },
+            "Network": {
+                "$path": "network/Client.luau"
+            }
+        }
+    }
+}

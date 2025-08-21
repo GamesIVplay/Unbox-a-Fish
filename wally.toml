@@ -1,0 +1,21 @@
+[package]
+name = "uxnknwn/tap-and-feed-a-brainrot"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+private = true
+
+[dependencies]
+Jecs = "ukendio/jecs@=0.8.3"
+Planck = "yetanotherclown/planck@=0.2.0"
+PlanckJabby = "yetanotherclown/planck-jabby@=0.2.0"
+PlanckRunService = "yetanotherclown/planck-runservice@=0.2.0"
+Jabby = "alicesaidhi/jabby@=0.2.0"
+
+Fusion = "uxnkown/fusion@=0.3.0"
+ProfileStore = "uxnknwn/profilestore@=1.0.2"
+
+Signal = "red-blox/signal@^2.0.0"
+Ratelimit = "red-blox/ratelimit@^1.0.0"
+Clock = "red-blox/clock@^1.0.0"
+Collection = "red-blox/collection@^1.0.0"
