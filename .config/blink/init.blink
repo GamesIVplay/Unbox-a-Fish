@@ -53,4 +53,11 @@ scope PlayerChanges {
         Call: SingleSync,
         Data: Types.FriendBoost
     }
+
+    event PlotChosen {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Instance(Model)
+    }
 }

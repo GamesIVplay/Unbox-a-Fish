@@ -1,6 +1,14 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Assets = ReplicatedStorage:WaitForChild("Assets")
+
+local Billboards = Assets:WaitForChild("Billboards")
+local YourPlot_Billboard = Billboards:WaitForChild("YourPlot") :: BillboardGui
+
+local Jecs = require(ReplicatedStorage.Packages.Jecs)
+local Pair = Jecs.pair
+
 local Network = require(ReplicatedFirst.Network)
 
 local Components = require(ReplicatedStorage.Common.Components)
@@ -60,6 +68,21 @@ local function Handle_Friend_Boost_Changes(LocalEntity: Types.Entity)
     end
 end
 
+local function Handle_Plot_Assign(LocalEntity: Types.Entity)
+    for _, Value in Network.PlayerChanges.PlotChosen.Iter() do
+        YourPlot_Billboard:Clone().Parent = Value
+
+         local PlotEntity = World:entity()
+
+        World:set(PlotEntity, Components.Renderable, Value)
+
+        World:add(PlotEntity, Components.Tags.Plot)
+        World:add(PlotEntity, Pair(Components.Relationships.Owner, LocalEntity))
+
+        World:add(LocalEntity, Pair(Components.Relationships.Plot, PlotEntity))
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -77,6 +100,8 @@ return {
         Handle_Tutorial_Step_Changes(LocalEntity)
 
         Handle_Friend_Boost_Changes(LocalEntity)
+
+        Handle_Plot_Assign(LocalEntity)
     end,
     runConditions = {},
 }

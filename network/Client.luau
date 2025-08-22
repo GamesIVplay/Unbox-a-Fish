@@ -156,6 +156,7 @@ Queue.Reliable[3] = CreateQueue()
 Queue.Reliable[4] = CreateQueue()
 Queue.Reliable[5] = CreateQueue()
 Queue.Reliable[6] = CreateQueue()
+Queue.Reliable[7] = CreateQueue()
 export type Types_Entity = number
 export type Types_Cash = number
 export type Types_ToolLevel = number
@@ -250,6 +251,14 @@ local function PlayerChanges_ReadEVENT_FriendBoost(): (number)
 	return Value
 end
 
+local function PlayerChanges_ReadEVENT_PlotChosen(): (Model)
+	RecieveInstanceCursor += 1
+	local Value = RecieveInstances[RecieveInstanceCursor]
+	if typeof(Value) ~= "Instance" then error(`Expected an Instance, got {typeof(Value)} instead.`) end
+	if not Value:IsA("Model") then error(`Expected an Instance of type "Model", got "{Value.ClassName}" instead.`) end
+	return Value
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -280,6 +289,10 @@ if not RunService:IsRunning() then
 			Next = NOOP
 		},
 		FriendBoost = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		PlotChosen = {
 			Iter = NOOP,
 			Next = NOOP
 		},
@@ -333,6 +346,8 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 			Push(Queue.Reliable[5], table.pack(PlayerChanges_ReadEVENT_TutorialStep()))
 		elseif Index == 6 then
 			Push(Queue.Reliable[6], table.pack(PlayerChanges_ReadEVENT_FriendBoost()))
+		elseif Index == 7 then
+			Push(Queue.Reliable[7], table.pack(PlayerChanges_ReadEVENT_PlotChosen()))
 		end
 	end
 end)
@@ -514,6 +529,33 @@ local Returns = table.freeze({
 				local index = 0
 				local queue = Queue.Reliable[6]
 				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		PlotChosen = {
+			Iter = function(): () -> (number, Model)
+				local index = 0
+				local queue = Queue.Reliable[7]
+				return function (): (number, Model)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, Model)
+				local index = 0
+				local queue = Queue.Reliable[7]
+				return function (): (number, Model)
 					index += 1
 					local arguments = Pop(queue)
 					if arguments ~= nil then

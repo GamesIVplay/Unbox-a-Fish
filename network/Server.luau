@@ -241,6 +241,13 @@ local function PlayerChanges_WriteEVENT_FriendBoost(Value: number): ()
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value)
 end
 
+local function PlayerChanges_WriteEVENT_PlotChosen(Value: Model): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
+	table.insert(SendInstances, Value or Null)
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -282,6 +289,12 @@ if not RunService:IsRunning() then
 			FireExcept = NOOP
 		},
 		FriendBoost = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
+		},
+		PlotChosen = {
 			Fire = NOOP,
 			FireAll = NOOP,
 			FireList = NOOP,
@@ -660,6 +673,52 @@ local Returns = table.freeze({
 			FireExcept = function(Except: Player, Value: number): ()
 				Load()
 				PlayerChanges_WriteEVENT_FriendBoost(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+		},
+		PlotChosen = {
+			Fire = function(Player: Player, Value: Model): ()
+				Load(PlayersMap[Player])
+				PlayerChanges_WriteEVENT_PlotChosen(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: Model): ()
+				Load()
+				PlayerChanges_WriteEVENT_PlotChosen(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: Model): ()
+				Load()
+				PlayerChanges_WriteEVENT_PlotChosen(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: Model): ()
+				Load()
+				PlayerChanges_WriteEVENT_PlotChosen(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then

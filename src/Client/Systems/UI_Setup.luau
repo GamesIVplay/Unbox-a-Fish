@@ -179,20 +179,32 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     local HUD = PlayerGui:WaitForChild("HUD") :: ScreenGui
 
     local Top = HUD:WaitForChild("Top")
-    local House = HUD:WaitForChild("House") :: ImageButton
-    local Sell = HUD:WaitForChild("Sell") :: ImageButton
-    local Upgrade = HUD:WaitForChild("Upgrade") :: ImageButton
+    local House = Top:WaitForChild("House") :: ImageButton
+    local Sell = Top:WaitForChild("Sell") :: ImageButton
+    local Upgrade = Top:WaitForChild("Upgrade") :: ImageButton
+
+    local Left = HUD:WaitForChild("Left")
+    local Store = Left:WaitForChild("Store") :: ImageButton
+    local Index = Left:WaitForChild("Index")
 
     Hydrate_Button(House, function()
-        if LocalPlayer:HasTag("IsStealing") then
+        local PlotEntity = World:target(LocalEntity, Components.Relationships.Plot)
+
+        if not PlotEntity then
             return
         end
+
+        local PlotModel = World:get(PlotEntity, Components.Renderable) :: Model
+
+        local PlotSpawn = PlotModel:WaitForChild("Spawn") :: Part
 
         local Character: Model? = World:get(LocalEntity, Components.Renderable)
 
         if not Character then
             return
         end
+
+        Character:PivotTo(PlotSpawn.CFrame)
     end)
 
     Hydrate_Button(Sell, function()
@@ -205,14 +217,14 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
         Character:PivotTo(Sell_Shop_Teleport.CFrame)
     end)
 
-    Hydrate_Button(Tools, function()
+    Hydrate_Button(Upgrade, function()
         local Character: Model? = World:get(LocalEntity, Components.Renderable)
 
         if not Character then
             return
         end
 
-        Character:PivotTo(Tool_Shop_Spawn.CFrame)
+        Character:PivotTo(Upgrade_Shop_Teleport.CFrame)
     end)
 
     local Money = HUD:WaitForChild("Money")
@@ -227,7 +239,7 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     Scope:Hydrate(FriendBoost)({
         Text = Scope:Computed(function(Use)
-            local Percent = math.round((Use(Fusion_Values.FriendBoost) - 1) * 100)
+            local Percent = math.round((Use(Fusion_Values.Friend_Boost) - 1) * 100)
             return string.format("%d%% Friend Boost", Percent)
         end),
         [Children] = {
@@ -266,7 +278,63 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             }),
         },
     })
+
+    Hydrate_Button(Store, function()
+        if Peek(Fusion_Values.Screen) == "Store" then
+            Fusion_Values.Screen:set("HUD")
+        else
+            Fusion_Values.Screen:set("Store")
+        end
+    end)
+
+    Hydrate_Button(Index, function()
+        if Peek(Fusion_Values.Screen) == "Index" then
+            Fusion_Values.Screen:set("HUD")
+        else
+            Fusion_Values.Screen:set("Index")
+        end
+    end)
 end
+
+local function Setup_Store(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+
+    local Store_Panel = Panels:WaitForChild("Store")
+    local Close = Store_Panel:WaitForChild("Close") :: ImageButton
+
+    Scope:Hydrate(Store_Panel)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "Store"
+        end),
+    })
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+end
+
+local function Setup_Index(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+
+    local Index_Panel = Panels:WaitForChild("Index")
+    local Close = Index_Panel:WaitForChild("Close") :: ImageButton
+
+    Scope:Hydrate(Index_Panel)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "Index"
+        end),
+    })
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+end
+
+local function Setup_Upgrade_Shop(LocalEntity : Types.Entity) end
+
+local function Setup_Crate_Shop(LocalEntity : Types.Entity) end
+
+local function Setup_Sell(LocalEntity : Types.Entity) end
 
 return {
     name = script.Name,
@@ -280,6 +348,8 @@ return {
             local PlayerGui = LocalPlayer.PlayerGui
 
             Setup_Hud(LocalEntity, PlayerGui)
+            Setup_Store(LocalEntity, PlayerGui)
+            Setup_Index(LocalEntity, PlayerGui)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then
