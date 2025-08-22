@@ -4,4 +4,4 @@ local Start = require(ReplicatedStorage.Common.Start)
 
 local Systems = script.Parent.Systems
 
-Start({ require(Systems.Player_Session) })
+Start({ require(Systems.Player_Session), require(Systems.Player_Data_Replication) })

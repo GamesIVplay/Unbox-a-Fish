@@ -11,3 +11,46 @@ event ClientLoaded {
     Call: SingleSync
 }
 
+scope PlayerChanges {
+    event Cash {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync, 
+        Data: Types.Cash 
+    }
+
+    event ToolLevel {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync, 
+        Data: Types.ToolLevel 
+    }
+
+    event LuckLevel {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync, 
+        Data: Types.ToolLevel 
+    }
+
+    event Index {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Types.Index
+    }
+
+    event TutorialStep {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Types.TutorialStep
+    }
+
+    event FriendBoost {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Types.FriendBoost
+    }
+}

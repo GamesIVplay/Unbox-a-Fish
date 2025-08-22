@@ -1,4 +1,13 @@
-type Cash = f64
 type Entity = f64
-enum Rarity = {Common, Rare, Epic, Legendary, Mythic, Secret}
+
+type Cash = f64
+type ToolLevel = u16
+type LuckLevel = u16
+type TutorialStep = u8
+
 enum Mutation = {Normal, Gold, Diamond, Rainbow, Huge}
+map Index = { [Mutation]: string[] }
+
+enum Rarity = {Common, Rare, Epic, Legendary, Mythic, Secret}
+
+type FriendBoost = u8

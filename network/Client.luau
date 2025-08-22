@@ -150,14 +150,104 @@ local Queue: any = {
     Unreliable = table.create(256)
 }
 
-export type Types_Cash = number
+Queue.Reliable[1] = CreateQueue()
+Queue.Reliable[2] = CreateQueue()
+Queue.Reliable[3] = CreateQueue()
+Queue.Reliable[4] = CreateQueue()
+Queue.Reliable[5] = CreateQueue()
+Queue.Reliable[6] = CreateQueue()
 export type Types_Entity = number
-export type Types_Rarity = ("Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret")
+export type Types_Cash = number
+export type Types_ToolLevel = number
+export type Types_LuckLevel = number
+export type Types_TutorialStep = number
 export type Types_Mutation = ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")
+export type Types_Index = {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}
+export type Types_Rarity = ("Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret")
+export type Types_FriendBoost = number
 local function WriteEVENT_ClientLoaded(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 0)
+end
+
+local function PlayerChanges_ReadEVENT_Cash(): (number)
+	-- Read BLOCK: 8 bytes
+	local BLOCK_START = Read(8)
+	local Value = buffer.readf64(RecieveBuffer, BLOCK_START + 0)
+	return Value
+end
+
+local function PlayerChanges_ReadEVENT_ToolLevel(): (number)
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Value = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	return Value
+end
+
+local function PlayerChanges_ReadEVENT_LuckLevel(): (number)
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Value = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	return Value
+end
+
+local function PlayerChanges_ReadEVENT_Index(): ({[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Value = {}
+	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	for _ = 1, Elements_1 do
+		local Key_1 = true :: any
+		local OFFSET_0 = Read(1)
+		local Index = buffer.readu8(RecieveBuffer, OFFSET_0)
+		if Index == 0 then
+			Key_1 = "Normal"
+		elseif Index == 1 then
+			Key_1 = "Gold"
+		elseif Index == 2 then
+			Key_1 = "Diamond"
+		elseif Index == 3 then
+			Key_1 = "Rainbow"
+		elseif Index == 4 then
+			Key_1 = "Huge"
+		else
+			error(`Unexpected enum: {Index}`)
+		end
+		-- START ARRAY
+		local OFFSET_1 = Read(2)
+		local Length = buffer.readu16(RecieveBuffer, OFFSET_1)
+		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
+		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
+		local Element_1 = table.create(Length)
+			-- Read BLOCK: 2 bytes
+		local ARRAY_START_2 = Read(2 * Length)
+		for Index = 1, Length do
+			-- Read 2
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_0)
+			local Item_2 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			table.insert(Element_1, Item_2)
+		end
+		-- END ARRAY
+		Value[Key_1] = Element_1
+	end
+	return Value
+end
+
+local function PlayerChanges_ReadEVENT_TutorialStep(): (number)
+	-- Read BLOCK: 1 bytes
+	local BLOCK_START = Read(1)
+	local Value = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+	return Value
+end
+
+local function PlayerChanges_ReadEVENT_FriendBoost(): (number)
+	-- Read BLOCK: 1 bytes
+	local BLOCK_START = Read(1)
+	local Value = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+	return Value
 end
 
 if not RunService:IsRunning() then
@@ -167,6 +257,32 @@ if not RunService:IsRunning() then
 	},
 	ClientLoaded = {
 		Fire = NOOP
+	},
+	PlayerChanges = {
+		Cash = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		ToolLevel = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		LuckLevel = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		Index = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		TutorialStep = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		FriendBoost = {
+			Iter = NOOP,
+			Next = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -205,6 +321,19 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 		-- Read BLOCK: 1 bytes
 		local BLOCK_START = Read(1)
 		local Index = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+		if Index == 1 then
+			Push(Queue.Reliable[1], table.pack(PlayerChanges_ReadEVENT_Cash()))
+		elseif Index == 2 then
+			Push(Queue.Reliable[2], table.pack(PlayerChanges_ReadEVENT_ToolLevel()))
+		elseif Index == 3 then
+			Push(Queue.Reliable[3], table.pack(PlayerChanges_ReadEVENT_LuckLevel()))
+		elseif Index == 4 then
+			Push(Queue.Reliable[4], table.pack(PlayerChanges_ReadEVENT_Index()))
+		elseif Index == 5 then
+			Push(Queue.Reliable[5], table.pack(PlayerChanges_ReadEVENT_TutorialStep()))
+		elseif Index == 6 then
+			Push(Queue.Reliable[6], table.pack(PlayerChanges_ReadEVENT_FriendBoost()))
+		end
 	end
 end)
 Unreliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
@@ -230,6 +359,170 @@ local Returns = table.freeze({
 		Fire = function(Value: nil): ()
 			WriteEVENT_ClientLoaded(Value)
 		end
+	},
+	PlayerChanges = {
+		Cash = {
+			Iter = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[1]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[1]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		ToolLevel = {
+			Iter = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[2]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[2]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		LuckLevel = {
+			Iter = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[3]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[3]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		Index = {
+			Iter = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+				local index = 0
+				local queue = Queue.Reliable[4]
+				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+				local index = 0
+				local queue = Queue.Reliable[4]
+				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		TutorialStep = {
+			Iter = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[5]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[5]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		FriendBoost = {
+			Iter = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[6]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, number)
+				local index = 0
+				local queue = Queue.Reliable[6]
+				return function (): (number, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
 	},
 })
 type BLINK_EVENTS_SYMBOL = typeof(Returns)
