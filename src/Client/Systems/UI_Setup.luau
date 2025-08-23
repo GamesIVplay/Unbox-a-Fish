@@ -4,6 +4,12 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+local ActivateHaptic = Instance.new("HapticEffect")
+ActivateHaptic.Position = Vector3.new(0, 0, 0)
+ActivateHaptic.Radius = 1
+ActivateHaptic.Type = Enum.HapticEffectType.UIHover
+ActivateHaptic.Parent = workspace
+
 local Network = require(ReplicatedFirst.Network)
 
 local Map = workspace:WaitForChild("Map")
@@ -177,6 +183,7 @@ local function Hydrate_Button(GuiButton: GuiButton, OnActivate: () -> (), HMulti
         end,
         [OnEvent("Activated")] = function()
             Activate:Play()
+            ActivateHaptic:Play()
             SizeMultiplierSpring:addVelocity(AVelocity or ACTIVATE_VELOCITY)
 
             OnActivate()

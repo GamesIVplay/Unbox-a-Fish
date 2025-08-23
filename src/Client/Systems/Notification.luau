@@ -2,6 +2,12 @@ local Debris = game:GetService("Debris")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local NotificationHaptic = Instance.new("HapticEffect")
+NotificationHaptic.Position = Vector3.new(0, 0, 0)
+NotificationHaptic.Radius = 1
+NotificationHaptic.Type = Enum.HapticEffectType.UIHover
+NotificationHaptic.Parent = workspace
+
 local Assets = ReplicatedStorage:WaitForChild("Assets")
 
 local Sounds = Assets:WaitForChild("Sounds")
@@ -96,6 +102,8 @@ local function Create_Notifications()
         end
 
         Notification.Parent = Notifications
+
+        NotificationHaptic:Play()
 
         task.spawn(function()
             for i = 1, #Text do

@@ -50,6 +50,7 @@ return {
             local Crate_Stand = Plot_Model:FindFirstChild("Crate_Stand") :: Model
 
             local Owner_Entity = World:target(Plot_Entity, Components.Relationships.Owner)
+            local Owner_Player = World:get(Owner_Entity, Components.Player) :: Player
 
             local Crate_Queue = World:get(Owner_Entity, Components.Crate_Queue)
             local Luck_Level = World:get(Owner_Entity, Components.Luck_Level)
@@ -71,6 +72,7 @@ return {
 
             local Crate_Model = Crate_Data.Model:Clone()
             Crate_Model:PivotTo(Crate_Stand:GetPivot())
+            Crate_Model:SetAttribute("Owner", Owner_Player.UserId)
 
             Crate_Model.Parent = Crates_Folder
 
@@ -82,6 +84,7 @@ return {
             World:set(Crate_Entity, Pair(Components.Relationships.Max, Components.Health), Crate_Data.Health)
 
             World:add(Crate_Entity, Components.Tags.Crate)
+            World:add(Crate_Entity, Components.Tags.Networked)
             World:add(Plot_Entity, Pair(Components.Relationships.Crate, Crate_Entity))
 
             World:set(Crate_Entity, Components.Cleanup, function()
