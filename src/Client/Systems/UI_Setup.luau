@@ -4,17 +4,26 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+local Network = require(ReplicatedFirst.Network)
+
 local Map = workspace:WaitForChild("Map")
 
 local Interactables = Map:WaitForChild("Interactables")
 
 local Upgrade_Shop = Interactables:WaitForChild("Upgrade_Shop") :: Model
+local Upgrade_Shop_Npc = Upgrade_Shop:WaitForChild("Npc") :: Model
 local Upgrade_Shop_Teleport = Upgrade_Shop:WaitForChild("Teleport") :: Part
 
 local Sell_Shop = Interactables:WaitForChild("Sell_Shop") :: Model
+local Sell_Shop_Npc = Sell_Shop:WaitForChild("Npc") :: Model
 local Sell_Shop_Teleport = Sell_Shop:WaitForChild("Teleport") :: Part
 
+local Crate_Shop = Interactables:WaitForChild("Crate_Shop") :: Model
+local Crate_Shop_Npc = Crate_Shop:WaitForChild("Npc") :: Model
+
 local Assets = ReplicatedStorage:WaitForChild("Assets")
+
+local UIGradients = Assets:WaitForChild("UIGradients")
 
 local Sounds = Assets:WaitForChild("Sounds")
 
@@ -36,6 +45,10 @@ local Types = require(ReplicatedStorage.Common.Types)
 
 local Confetti = require(ReplicatedStorage.Common.Modules.Confetti)
 
+local Crates = require(ReplicatedStorage.Common.Modules.Crates)
+local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
+local Luck_Prices = require(ReplicatedStorage.Common.Modules.Luck_Prices)
+
 local Log = require(ReplicatedStorage.Common.Log)
 
 local Components = require(ReplicatedStorage.Common.Components)
@@ -44,7 +57,10 @@ local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
 
 local Abbreviate_Number = require(ReplicatedStorage.Common.Modules.Abbreviate_Number)
+local StatCalculator = require(ReplicatedStorage.Common.Modules.StatCalculator)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
+
+local Clock = require(ReplicatedStorage.Packages.Clock)
 
 local DEFAULT_SIZE_MULTIPLIER = 1
 local HOVER_SIZE_MULTIPLIER = 1.05
@@ -138,14 +154,14 @@ local function Add_Blur(Size: number)
     BlurEffect = BlurEffectInstance
 end
 
-local function Hydrate_Button(GuiButton: GuiButton, OnActivate: () -> ())
+local function Hydrate_Button(GuiButton: GuiButton, OnActivate: () -> (), HMultiplier: number?, AVelocity: number?)
     local SizeMultiplier = Scope:Value(DEFAULT_SIZE_MULTIPLIER)
     local Hovering = Scope:Value(false)
     local SizeMultiplierSpring = Scope:Spring(SizeMultiplier, 17, 0.5)
 
     Scope:Observer(Hovering):onBind(function()
         if Peek(Hovering) then
-            SizeMultiplier:set(HOVER_SIZE_MULTIPLIER)
+            SizeMultiplier:set(HMultiplier or HOVER_SIZE_MULTIPLIER)
         else
             SizeMultiplier:set(DEFAULT_SIZE_MULTIPLIER)
         end
@@ -161,7 +177,7 @@ local function Hydrate_Button(GuiButton: GuiButton, OnActivate: () -> ())
         end,
         [OnEvent("Activated")] = function()
             Activate:Play()
-            SizeMultiplierSpring:addVelocity(ACTIVATE_VELOCITY)
+            SizeMultiplierSpring:addVelocity(AVelocity or ACTIVATE_VELOCITY)
 
             OnActivate()
         end,
@@ -330,11 +346,349 @@ local function Setup_Index(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     end)
 end
 
-local function Setup_Upgrade_Shop(LocalEntity : Types.Entity) end
+local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
 
-local function Setup_Crate_Shop(LocalEntity : Types.Entity) end
+    local Upgrades_Panel = Panels:WaitForChild("Upgrades")
+    local Close = Upgrades_Panel:WaitForChild("Close") :: ImageButton
 
-local function Setup_Sell(LocalEntity : Types.Entity) end
+    local Scroll = Upgrades_Panel:WaitForChild("Scroll") :: ScrollingFrame
+
+    local Tool = Scroll:WaitForChild("Tool") :: ImageLabel
+    local Tool_Buy_Button = Tool:WaitForChild("Buy") :: ImageButton
+    local Tool_Price_Text = Tool_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Tool_Info = Tool:WaitForChild("Info") :: Frame
+    local Tool_Title = Tool_Info:WaitForChild("Title") :: TextLabel
+    local Tool_Boost = Tool_Info:WaitForChild("Boost") :: TextLabel
+    local Tool_Icon = Tool:WaitForChild("Icon") :: ImageLabel
+    local Tool_Viewport = Tool_Icon:WaitForChild("Viewport") :: ViewportFrame
+
+    local Luck = Scroll:WaitForChild("Luck") :: ImageLabel
+    local Luck_Buy_Button = Luck:WaitForChild("Buy") :: ImageButton
+    local Luck_Price_Text = Luck_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Luck_Info = Luck:WaitForChild("Info") :: Frame
+    local Luck_Boost = Luck_Info:WaitForChild("Boost") :: TextLabel
+
+    local Current_Tool_Data = Scope:Computed(function(Use)
+        local Current_Tool_Level = Use(Fusion_Values.Tool_Level)
+
+        return Hammers[Current_Tool_Level]
+    end)
+
+    local Next_Tool_Data = Scope:Computed(function(Use)
+        local Current_Tool_Level = Use(Fusion_Values.Tool_Level)
+
+        return Hammers[Current_Tool_Level + 1]
+    end)
+
+    Scope:Hydrate(Tool_Title)({
+        Text = Scope:Computed(function(Use)
+            local Data = Use(Next_Tool_Data)
+            return Data and Data.Name or "?"
+        end),
+    })
+
+    Scope:Hydrate(Tool_Boost)({
+        Text = Scope:Computed(function(Use)
+            local Current_Data = Use(Current_Tool_Data)
+            local Next_Data = Use(Next_Tool_Data)
+
+            return `{Current_Data.Damage} -> {Next_Data and Next_Data.Damage or "?"}`
+        end),
+    })
+
+    Scope:Hydrate(Upgrades_Panel)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "Upgrades"
+        end),
+    })
+
+    Scope:Hydrate(Tool_Viewport)({
+        [Children] = Scope:Computed(function(Use, Processor: Fusion.Scope<Fusion.Fusion>)
+            local Children = {}
+
+            local Data = Use(Next_Tool_Data)
+
+            if not Data then
+                return Children
+            end
+
+            local Camera = Instance.new("Camera")
+            Camera.CFrame = CFrame.new(Vector3.zero)
+            Camera.Parent = Tool_Viewport
+
+            table.insert(Processor, Camera)
+
+            Tool_Viewport.CurrentCamera = Camera
+
+            local Model = Data.Model:Clone() :: Model
+            Model.Parent = Tool_Viewport
+            Model:PivotTo(Data.Viewport_CFrame)
+
+            table.insert(Children, Model)
+
+            return Children
+        end),
+    })
+
+    Scope:Hydrate(Tool_Price_Text)({
+        Text = Scope:Computed(function(Use)
+            local Next_Data = Use(Next_Tool_Data)
+
+            return Next_Data and `${Util.Format_Number_With_Commas(Next_Data.Price)}` or "Max"
+        end),
+    })
+
+    Hydrate_Button(Tool_Buy_Button, function()
+        Network.Requests.UpgradeTool.Fire()
+    end)
+
+    Scope:Hydrate(Luck_Price_Text)({
+        Text = Scope:Computed(function(Use)
+            local Luck_Level = Use(Fusion_Values.Luck_Level)
+
+            return Luck_Prices[Luck_Level + 1] and `${Util.Format_Number_With_Commas(Luck_Prices[Luck_Level + 1])}`
+                or "Max"
+        end),
+    })
+
+    Scope:Hydrate(Luck_Boost)({
+        Text = Scope:Computed(function(Use)
+            local Luck_Level = Use(Fusion_Values.Luck_Level)
+
+            return `{StatCalculator.Calculate_Luck(Luck_Level)} -> {Luck_Prices[Luck_Level + 1] and StatCalculator.Calculate_Luck(
+                Luck_Level + 1
+            ) or "?"}`
+        end),
+    })
+
+    Hydrate_Button(Luck_Buy_Button, function()
+        Network.Requests.UpgradeLuck.Fire()
+    end)
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+
+    local RootPart = Upgrade_Shop_Npc:WaitForChild("HumanoidRootPart")
+
+    local ProximityPrompt = Instance.new("ProximityPrompt")
+    ProximityPrompt.ClickablePrompt = true
+    ProximityPrompt.Enabled = true
+    ProximityPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+    ProximityPrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+    ProximityPrompt.KeyboardKeyCode = Enum.KeyCode.E
+    ProximityPrompt.MaxActivationDistance = 15
+    ProximityPrompt.RequiresLineOfSight = false
+    ProximityPrompt.HoldDuration = 0
+    ProximityPrompt.ActionText = "Open Upgrades"
+    ProximityPrompt.ObjectText = ""
+    ProximityPrompt.Style = Enum.ProximityPromptStyle.Custom
+    ProximityPrompt.Parent = RootPart
+
+    ProximityPrompt.Triggered:Connect(function(TargetPlayer)
+        Fusion_Values.Screen:set("Upgrades")
+    end)
+end
+
+local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+
+    local Crates_Panel = Panels:WaitForChild("Crates")
+    local Scroll = Crates_Panel:WaitForChild("Scroll") :: ScrollingFrame
+    local Purchase_Frame = Scroll:WaitForChild("Purchase")
+    local Purchase_Frame_Buy_Button = Purchase_Frame:WaitForChild("Buy") :: ImageButton
+    local Purchase_Frame_Buy_Button_Title = Purchase_Frame_Buy_Button:WaitForChild("Title") :: TextLabel
+    local Purchase_Frame_Robux_Buy_Button = Purchase_Frame:WaitForChild("Robux_Buy") :: ImageButton
+    local Purchase_Frame_Robux_Buy_Button_Title = Purchase_Frame_Robux_Buy_Button:WaitForChild("Title") :: TextLabel
+    local Template = Scroll:WaitForChild("Template") :: ImageButton
+    local Restock = Crates_Panel:WaitForChild("Restock") :: ImageButton
+    local Timer = Crates_Panel:WaitForChild("Timer")
+    local Timer_Title = Timer:WaitForChild("Title") :: TextLabel
+
+    local PURCHASE_FRAME_ENABLED_SIZE = UDim2.fromScale(0.96, 0.184)
+    local PURCHASE_FRAME_DISABLED_SIZE = UDim2.fromScale(0.96, 0)
+
+    local Purchase_Frame_Name = Scope:Value(nil)
+    local Purchase_Frame_Size = Scope:Value(PURCHASE_FRAME_DISABLED_SIZE)
+    local Purchase_Frame_Size_Spring = Scope:Spring(Purchase_Frame_Size, 30, 1)
+    local Purchase_Frame_Layout_Order = Scope:Value(0)
+
+    Scope:Hydrate(Purchase_Frame)({
+        LayoutOrder = Scope:Computed(function(Use)
+            return Use(Purchase_Frame_Layout_Order)
+        end),
+        Size = Purchase_Frame_Size_Spring,
+    })
+
+    Scope:Observer(Fusion_Values.Screen):onChange(function()
+        if Peek(Fusion_Values.Screen) ~= "Crates" then
+            Purchase_Frame_Size:set(PURCHASE_FRAME_DISABLED_SIZE)
+
+            Purchase_Frame_Size_Spring:setPosition(PURCHASE_FRAME_DISABLED_SIZE)
+        end
+    end)
+
+    for Crate_Name, Crate_Data in Crates do
+        local Frame = Template:Clone()
+
+        local NoStock = Frame:WaitForChild("NoStock")
+
+        local Icon = Frame:WaitForChild("Icon")
+        local Viewport = Icon:WaitForChild("Viewport") :: ViewportFrame
+
+        local Rarity = Frame:WaitForChild("Rarity") :: ImageLabel
+        local Rarity_Title = Rarity:WaitForChild("Title") :: TextLabel
+
+        local Info = Frame:WaitForChild("Info")
+        local Title = Info:WaitForChild("Title") :: TextLabel
+        local Stock = Info:WaitForChild("Stock") :: TextLabel
+        local Price = Info:WaitForChild("Price") :: TextLabel
+
+        Scope:Hydrate(NoStock)({
+            Visible = Scope:Computed(function(Use)
+                local Current_Stock = Use(Fusion_Values.Stock)
+                local Crate_Stock = Current_Stock[Crate_Name] or 0
+
+                return (Crate_Stock == 0)
+            end),
+        })
+
+        local Camera = Instance.new("Camera")
+        Camera.CFrame = CFrame.new(Vector3.zero)
+        Camera.Parent = Viewport
+
+        Viewport.CurrentCamera = Camera
+
+        local Model = Crate_Data.Model:Clone()
+        Model.Parent = Viewport
+
+        Model:PivotTo(Crate_Data.Viewport_CFrame)
+
+        Rarity_Title.Text = Crate_Data.Rarity
+
+        local Gradient = UIGradients:WaitForChild(Crate_Data.Rarity)
+        Gradient:Clone().Parent = Rarity
+
+        Title.Text = Crate_Name
+
+        Scope:Hydrate(Stock)({
+            Text = Scope:Computed(function(Use)
+                local Current_Stock = Use(Fusion_Values.Stock)
+
+                return `x{Current_Stock[Crate_Name] or 0}`
+            end),
+        })
+
+        Price.Text = `${Util.Format_Number_With_Commas(Crate_Data.Price)}`
+
+        Hydrate_Button(Frame, function()
+            if NoStock.Visible then
+                return
+            end
+
+            if Peek(Purchase_Frame_Name) == Crate_Name and Peek(Purchase_Frame_Size) == PURCHASE_FRAME_ENABLED_SIZE then
+                Purchase_Frame_Size:set(PURCHASE_FRAME_DISABLED_SIZE)
+
+                Purchase_Frame_Name:set(nil)
+                return
+            end
+
+            Purchase_Frame_Size_Spring:setPosition(PURCHASE_FRAME_DISABLED_SIZE)
+
+            Purchase_Frame_Layout_Order:set(Crate_Data.Price + 1)
+
+            Purchase_Frame_Size:set(PURCHASE_FRAME_ENABLED_SIZE)
+
+            Purchase_Frame_Name:set(Crate_Name)
+
+            Purchase_Frame_Buy_Button_Title.Text = `${Util.Format_Number_With_Commas(Crate_Data.Price)}`
+        end, 1.02, 1.05)
+
+        Frame.Parent = Scroll
+        Frame.LayoutOrder = Crate_Data.Price
+        Frame.Visible = true
+    end
+
+    Hydrate_Button(Purchase_Frame_Buy_Button, function()
+        local Crate_Name = Peek(Purchase_Frame_Name)
+
+        if not Crate_Name then
+            return
+        end
+
+        Network.Requests.BuyCrate.Fire(Crate_Name)
+    end)
+
+    Hydrate_Button(Purchase_Frame_Robux_Buy_Button, function() end)
+
+    Hydrate_Button(Restock, function() end)
+
+    Clock(1, function()
+        local Current_Time = os.time()
+        local Restock_Time = Peek(Fusion_Values.Restock_Time)
+
+        local SecondsLeft = math.max(Restock_Time - Current_Time, 0)
+
+        local Minutes = math.floor(SecondsLeft / 60)
+        local Seconds = SecondsLeft % 60
+        Timer_Title.Text = string.format("Restock in %02d:%02d", Minutes, Seconds)
+    end)
+
+    local Close = Crates_Panel:WaitForChild("Close") :: ImageButton
+
+    Scope:Hydrate(Crates_Panel)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "Crates"
+        end),
+    })
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+
+    local RootPart = Crate_Shop_Npc:WaitForChild("HumanoidRootPart")
+
+    local ProximityPrompt = Instance.new("ProximityPrompt")
+    ProximityPrompt.ClickablePrompt = true
+    ProximityPrompt.Enabled = true
+    ProximityPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+    ProximityPrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+    ProximityPrompt.KeyboardKeyCode = Enum.KeyCode.E
+    ProximityPrompt.MaxActivationDistance = 15
+    ProximityPrompt.RequiresLineOfSight = false
+    ProximityPrompt.HoldDuration = 0
+    ProximityPrompt.ActionText = "Open Crates"
+    ProximityPrompt.ObjectText = ""
+    ProximityPrompt.Style = Enum.ProximityPromptStyle.Custom
+    ProximityPrompt.Parent = RootPart
+
+    ProximityPrompt.Triggered:Connect(function(TargetPlayer)
+        Fusion_Values.Screen:set("Crates")
+    end)
+end
+
+local function Setup_Sell_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local RootPart = Sell_Shop_Npc:WaitForChild("HumanoidRootPart")
+
+    local ProximityPrompt = Instance.new("ProximityPrompt")
+    ProximityPrompt.ClickablePrompt = true
+    ProximityPrompt.Enabled = true
+    ProximityPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+    ProximityPrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+    ProximityPrompt.KeyboardKeyCode = Enum.KeyCode.E
+    ProximityPrompt.MaxActivationDistance = 15
+    ProximityPrompt.RequiresLineOfSight = false
+    ProximityPrompt.HoldDuration = 0
+    ProximityPrompt.ActionText = "Open Sell"
+    ProximityPrompt.ObjectText = ""
+    ProximityPrompt.Style = Enum.ProximityPromptStyle.Custom
+    ProximityPrompt.Parent = RootPart
+
+    ProximityPrompt.Triggered:Connect(function(TargetPlayer)
+        -- To Be Done
+    end)
+end
 
 return {
     name = script.Name,
@@ -350,6 +704,9 @@ return {
             Setup_Hud(LocalEntity, PlayerGui)
             Setup_Store(LocalEntity, PlayerGui)
             Setup_Index(LocalEntity, PlayerGui)
+            Setup_Crate_Shop(LocalEntity, PlayerGui)
+            Setup_Upgrade_Shop(LocalEntity, PlayerGui)
+            Setup_Sell_Shop(LocalEntity, PlayerGui)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then

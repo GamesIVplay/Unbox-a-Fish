@@ -18,7 +18,11 @@ type ProfileData = {
     Fish: {
         [number]: Types.SerializedFish,
     },
+    Stock: {
+        [string]: number,
+    },
     Tutorial_Step: number,
+    Restock_Time: number,
     LastPlayed: number,
 }
 
@@ -32,7 +36,9 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Index = {},
     Crate_Queue = {},
     Fish = {},
+    Stock = {},
     Tutorial_Step = 0,
+    Restock_Time = os.time() + 60 * 2,
     LastPlayed = os.time(),
 }
 

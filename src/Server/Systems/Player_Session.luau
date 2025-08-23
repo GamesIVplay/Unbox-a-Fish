@@ -22,6 +22,8 @@ local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
 
+local Add_Hammer = require(ReplicatedStorage.Common.Modules.Add_Hammer)
+
 local PlayersRemoving = Collect(Players.PlayerRemoving)
 
 local function Update_Character_Collision_Groups(Character: Model)
@@ -85,9 +87,11 @@ local function Handle_New_Players()
             World:set(PlayerEntity, Components.Luck_Level, ProfileData.Luck_Level)
             World:set(PlayerEntity, Components.Index, ProfileData.Index)
             World:set(PlayerEntity, Components.Crate_Queue, ProfileData.Crate_Queue)
+            World:set(PlayerEntity, Components.Stock, ProfileData.Stock)
 
             World:set(PlayerEntity, Components.Tutorial_Step, ProfileData.Tutorial_Step)
             World:set(PlayerEntity, Components.LastPlayed, ProfileData.LastPlayed)
+            World:set(PlayerEntity, Components.Restock_Time, ProfileData.Restock_Time)
 
             World:set(PlayerEntity, Pair(Components.Relationships.Queued, Components.Tags.Fish), ProfileData.Fish)
 
@@ -117,8 +121,10 @@ local function Handle_New_Players()
                 ProfileData.Luck_Level = World:get(PlayerEntity, Components.Luck_Level)
                 ProfileData.Index = World:get(PlayerEntity, Components.Index)
                 ProfileData.Crate_Queue = World:get(PlayerEntity, Components.Crate_Queue)
+                ProfileData.Stock = World:get(PlayerEntity, Components.Stock)
                 ProfileData.Tutorial_Step = World:get(PlayerEntity, Components.Tutorial_Step)
                 ProfileData.LastPlayed = os.time()
+                ProfileData.Restock_Time = World:get(PlayerEntity, Components.Restock_Time)
             end)
 
             if Player.Character then
@@ -148,6 +154,8 @@ local function Handle_New_Players()
                 Update_Character_Collision_Groups(Character)
 
                 Character.Parent = Characters
+
+                Add_Hammer(PlayerEntity, Player)
             end)
 
             Player.CharacterRemoving:Connect(function()

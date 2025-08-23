@@ -10,4 +10,6 @@ return table.freeze({
     Index = Scope:Value({}),
     Tutorial_Step = Scope:Value(0),
     Friend_Boost = Scope:Value(1),
+    Restock_Time = Scope:Value(0),
+    Stock = Scope:Value({}),
 })

@@ -25,18 +25,33 @@ local Components: {
 
     Tutorial_Step: Types.Id<number>,
 
+    Text: Types.Id<string>,
+    Duration: Types.Id<number>,
+
+    Color: Types.Id<Color3>,
+
+    Restock_Time: Types.Id<number>,
+
+    Stock: Types.Id<{ [string]: number }>,
+
+    Health: Types.Id<number>,
+
     Tags: {
         Networked: Types.Entity,
         Plot: Types.Entity,
         Fish: Types.Entity,
+        Notification: Types.Entity,
+        Crate: Types.Entity,
     },
 
     Relationships: {
+        Max: Types.Entity,
         Previous: Types.Entity,
         Owner: Types.Entity,
         Plot: Types.Entity,
         Offline: Types.Entity,
         Queued: Types.Entity,
+        Crate: Types.Entity,
     },
 } =
     {
@@ -61,17 +76,32 @@ local Components: {
 
         Tutorial_Step = World:component(),
 
+        Text = World:component(),
+        Duration = World:component(),
+
+        Color = World:component(),
+
+        Restock_Time = World:component(),
+
+        Stock = World:component(),
+
+        Health = World:component(),
+
         Tags = {
             Networked = World:component(),
             Plot = World:component(),
             Fish = World:component(),
+            Notification = World:component(),
+            Crate = World:component(),
         },
         Relationships = {
+            Max = World:component(),
             Previous = World:component(),
             Owner = World:component(),
             Plot = World:component(),
             Offline = World:component(),
             Queued = World:component(),
+            Crate = World:component(),
         },
     }
 

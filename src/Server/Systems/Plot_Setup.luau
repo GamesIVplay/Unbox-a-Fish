@@ -1,6 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
@@ -8,7 +7,6 @@ local World = require(ReplicatedStorage.Common.World)
 
 local Map = workspace:WaitForChild("Map")
 local Plots = Map:WaitForChild("Plots")
-
 
 return {
     name = script.Name,
@@ -24,7 +22,6 @@ return {
 
             World:add(Entity, Components.Tags.Plot)
             World:add(Entity, Components.Tags.Networked)
-
         end
     end,
     runConditions = {},

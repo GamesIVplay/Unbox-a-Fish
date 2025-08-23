@@ -11,6 +11,38 @@ event ClientLoaded {
     Call: SingleSync
 }
 
+event Notification {
+    From: Server,
+    Type: Reliable,
+    Call: SingleSync,
+    Data: struct {
+        Text: string,
+        Duration: u8?,
+        Color: Color3?
+    }
+}
+
+scope Requests {
+    event UpgradeTool {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync
+    }
+
+    event UpgradeLuck {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync
+    }
+
+    event BuyCrate {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync,
+       Data: string
+    }
+}
+
 scope PlayerChanges {
     event Cash {
         From: Server,
@@ -59,5 +91,19 @@ scope PlayerChanges {
         Type: Reliable,
         Call: SingleSync,
         Data: Instance(Model)
+    }
+
+    event RestockTime {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: f64
+    }
+
+    event Stock {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Types.Stock 
     }
 }

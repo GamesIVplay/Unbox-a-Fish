@@ -152,6 +152,9 @@ local Queue: any = {
 }
 
 Queue.Reliable[0] = CreateQueue()
+Queue.Reliable[2] = CreateQueue()
+Queue.Reliable[3] = CreateQueue()
+Queue.Reliable[4] = CreateQueue()
 export type Types_Entity = number
 export type Types_Cash = number
 export type Types_ToolLevel = number
@@ -159,37 +162,79 @@ export type Types_LuckLevel = number
 export type Types_TutorialStep = number
 export type Types_Mutation = ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")
 export type Types_Index = {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}
+export type Types_Stock = {[string]: number}
 export type Types_Rarity = ("Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret")
 export type Types_FriendBoost = number
 local function ReadEVENT_ClientLoaded(): (nil)
 	return nil
 end
 
+local function WriteEVENT_Notification(Value: { Text: string, Duration: number?, Color: Color3? }): ()
+	-- Allocate BLOCK: 5 bytes
+	local BLOCK_START = Allocate(5)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 1)
+	local Length = #Value.Text
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
+	Allocate(Length)
+	buffer.writestring(SendBuffer, SendOffset, Value.Text, Length)
+	buffer.writeu8(SendBuffer, BLOCK_START + 3, Value.Duration ~= nil and 1 or 0)
+	if Value.Duration ~= nil then
+		-- Allocate BLOCK: 1 bytes
+		local BLOCK_START = Allocate(1)
+		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value.Duration)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 4, Value.Color ~= nil and 1 or 0)
+	if Value.Color ~= nil then
+		-- Allocate BLOCK: 3 bytes
+		local BLOCK_START = Allocate(3)
+		local Color = Value.Color
+		buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+		buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+		buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+	end
+end
+
+local function Requests_ReadEVENT_UpgradeTool(): (nil)
+	return nil
+end
+
+local function Requests_ReadEVENT_UpgradeLuck(): (nil)
+	return nil
+end
+
+local function Requests_ReadEVENT_BuyCrate(): (string)
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	local Value = buffer.readstring(RecieveBuffer, Read(Length), Length)
+	return Value
+end
+
 local function PlayerChanges_WriteEVENT_Cash(Value: number): ()
 	-- Allocate BLOCK: 9 bytes
 	local BLOCK_START = Allocate(9)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 5)
 	buffer.writef64(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_ToolLevel(Value: number): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 2)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_LuckLevel(Value: number): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 3)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_Index(Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 4)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value do
 		Elements_1 += 1
@@ -230,22 +275,47 @@ end
 local function PlayerChanges_WriteEVENT_TutorialStep(Value: number): ()
 	-- Allocate BLOCK: 2 bytes
 	local BLOCK_START = Allocate(2)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 5)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 9)
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_FriendBoost(Value: number): ()
 	-- Allocate BLOCK: 2 bytes
 	local BLOCK_START = Allocate(2)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_PlotChosen(Value: Model): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 11)
 	table.insert(SendInstances, Value or Null)
+end
+
+local function PlayerChanges_WriteEVENT_RestockTime(Value: number): ()
+	-- Allocate BLOCK: 9 bytes
+	local BLOCK_START = Allocate(9)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 12)
+	buffer.writef64(SendBuffer, BLOCK_START + 1, Value)
+end
+
+local function PlayerChanges_WriteEVENT_Stock(Value: {[string]: number}): ()
+	-- Allocate BLOCK: 3 bytes
+	local BLOCK_START = Allocate(3)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 13)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(8)
+		buffer.writef64(SendBuffer, OFFSET_1, Element_1)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
 end
 
 if not RunService:IsRunning() then
@@ -256,6 +326,26 @@ if not RunService:IsRunning() then
 	ClientLoaded = {
 		Iter = NOOP,
 		Next = NOOP
+	},
+	Notification = {
+		Fire = NOOP,
+		FireAll = NOOP,
+		FireList = NOOP,
+		FireExcept = NOOP
+	},
+	Requests = {
+		UpgradeTool = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		UpgradeLuck = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		BuyCrate = {
+			Iter = NOOP,
+			Next = NOOP
+		},
 	},
 	PlayerChanges = {
 		Cash = {
@@ -295,6 +385,18 @@ if not RunService:IsRunning() then
 			FireExcept = NOOP
 		},
 		PlotChosen = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
+		},
+		RestockTime = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
+		},
+		Stock = {
 			Fire = NOOP,
 			FireAll = NOOP,
 			FireList = NOOP,
@@ -360,6 +462,12 @@ Reliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instance
 		local Index = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
 		if Index == 0 then
 			Push(Queue.Reliable[0], table.pack(Player, ReadEVENT_ClientLoaded()))
+		elseif Index == 2 then
+			Push(Queue.Reliable[2], table.pack(Player, Requests_ReadEVENT_UpgradeTool()))
+		elseif Index == 3 then
+			Push(Queue.Reliable[3], table.pack(Player, Requests_ReadEVENT_UpgradeLuck()))
+		elseif Index == 4 then
+			Push(Queue.Reliable[4], table.pack(Player, Requests_ReadEVENT_BuyCrate()))
 		end
 	end
 end)
@@ -408,6 +516,135 @@ local Returns = table.freeze({
 				return 
 			end
 		end
+	},
+	Notification = {
+		Fire = function(Player: Player, Value: { Text: string, Duration: number?, Color: Color3? }): ()
+			Load(PlayersMap[Player])
+			WriteEVENT_Notification(Value)
+			PlayersMap[Player] = Save()
+		end,
+		FireAll = function(Value: { Text: string, Duration: number?, Color: Color3? }): ()
+			Load()
+			WriteEVENT_Notification(Value)
+			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+			for _, Player in Players:GetPlayers() do
+				Load(PlayersMap[Player])
+				local Position = Allocate(Size)
+				buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+				table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+				PlayersMap[Player] = Save()
+			end
+		end,
+		FireList = function(List: {Player}, Value: { Text: string, Duration: number?, Color: Color3? }): ()
+			Load()
+			WriteEVENT_Notification(Value)
+			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+			for _, Player in List do
+				Load(PlayersMap[Player])
+				local Position = Allocate(Size)
+				buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+				table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+				PlayersMap[Player] = Save()
+			end
+		end,
+		FireExcept = function(Except: Player, Value: { Text: string, Duration: number?, Color: Color3? }): ()
+			Load()
+			WriteEVENT_Notification(Value)
+			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+			for _, Player in Players:GetPlayers() do
+				if Player == Except then
+					continue
+				end
+				Load(PlayersMap[Player])
+				local Position = Allocate(Size)
+				buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+				table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+				PlayersMap[Player] = Save()
+			end
+		end,
+	},
+	Requests = {
+		UpgradeTool = {
+			Iter = function(): () -> (number, Player, nil)
+				local index = 0
+				local queue = Queue.Reliable[2]
+				return function (): (number, Player, nil)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, Player, nil)
+				local index = 0
+				local queue = Queue.Reliable[2]
+				return function (): (number, Player, nil)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		UpgradeLuck = {
+			Iter = function(): () -> (number, Player, nil)
+				local index = 0
+				local queue = Queue.Reliable[3]
+				return function (): (number, Player, nil)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, Player, nil)
+				local index = 0
+				local queue = Queue.Reliable[3]
+				return function (): (number, Player, nil)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		BuyCrate = {
+			Iter = function(): () -> (number, Player, string)
+				local index = 0
+				local queue = Queue.Reliable[4]
+				return function (): (number, Player, string)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, Player, string)
+				local index = 0
+				local queue = Queue.Reliable[4]
+				return function (): (number, Player, string)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
 	},
 	PlayerChanges = {
 		Cash = {
@@ -719,6 +956,98 @@ local Returns = table.freeze({
 			FireExcept = function(Except: Player, Value: Model): ()
 				Load()
 				PlayerChanges_WriteEVENT_PlotChosen(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+		},
+		RestockTime = {
+			Fire = function(Player: Player, Value: number): ()
+				Load(PlayersMap[Player])
+				PlayerChanges_WriteEVENT_RestockTime(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: number): ()
+				Load()
+				PlayerChanges_WriteEVENT_RestockTime(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: number): ()
+				Load()
+				PlayerChanges_WriteEVENT_RestockTime(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: number): ()
+				Load()
+				PlayerChanges_WriteEVENT_RestockTime(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+		},
+		Stock = {
+			Fire = function(Player: Player, Value: {[string]: number}): ()
+				Load(PlayersMap[Player])
+				PlayerChanges_WriteEVENT_Stock(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: {[string]: number}): ()
+				Load()
+				PlayerChanges_WriteEVENT_Stock(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: {[string]: number}): ()
+				Load()
+				PlayerChanges_WriteEVENT_Stock(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: {[string]: number}): ()
+				Load()
+				PlayerChanges_WriteEVENT_Stock(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then

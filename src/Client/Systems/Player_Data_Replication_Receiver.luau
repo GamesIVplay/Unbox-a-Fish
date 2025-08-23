@@ -72,7 +72,7 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
     for _, Value in Network.PlayerChanges.PlotChosen.Iter() do
         YourPlot_Billboard:Clone().Parent = Value
 
-         local PlotEntity = World:entity()
+        local PlotEntity = World:entity()
 
         World:set(PlotEntity, Components.Renderable, Value)
 
@@ -80,6 +80,22 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
         World:add(PlotEntity, Pair(Components.Relationships.Owner, LocalEntity))
 
         World:add(LocalEntity, Pair(Components.Relationships.Plot, PlotEntity))
+    end
+end
+
+local function Handle_Restock_Time(LocalEntity: Types.Entity)
+    for _, Value in Network.PlayerChanges.RestockTime.Iter() do
+        World:set(LocalEntity, Components.Restock_Time, Value)
+
+        Fusion_Values.Restock_Time:set(Value)
+    end
+end
+
+local function Handle_Stock_Changes(LocalEntity: Types.Entity)
+    for _, Value in Network.PlayerChanges.Stock.Iter() do
+        World:set(LocalEntity, Components.Stock, Value)
+
+        Fusion_Values.Stock:set(Value)
     end
 end
 
@@ -102,6 +118,10 @@ return {
         Handle_Friend_Boost_Changes(LocalEntity)
 
         Handle_Plot_Assign(LocalEntity)
+
+        Handle_Restock_Time(LocalEntity)
+
+        Handle_Stock_Changes(LocalEntity)
     end,
     runConditions = {},
 }

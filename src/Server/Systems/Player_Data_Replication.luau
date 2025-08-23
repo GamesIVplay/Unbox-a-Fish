@@ -15,6 +15,8 @@ local Util = require(ReplicatedStorage.Common.Modules.Util)
 
 local Types = require(ReplicatedStorage.Common.Types)
 
+local Add_Hammer = require(ReplicatedStorage.Common.Modules.Add_Hammer)
+
 local Player_Entities = World:query(Components.Player):cached()
 
 local function Replicate_Cash(Player: Player, Entity: Types.Entity)
@@ -35,6 +37,8 @@ local function Replicate_Tool_Level(Player: Player, Entity: Types.Entity)
     local Previous_Tool_Level = World:get(Entity, Pair(Components.Relationships.Previous, Components.Tool_Level))
 
     if Tool_Level ~= Previous_Tool_Level then
+        Add_Hammer(Entity, Player)
+
         Network.PlayerChanges.ToolLevel.Fire(Player, Tool_Level)
 
         World:set(Entity, Pair(Components.Relationships.Previous, Components.Tool_Level), Tool_Level)
@@ -110,6 +114,32 @@ local function Replicate_Friend_Boost(Player: Player, Entity: Types.Entity)
     end
 end
 
+local function Replicate_Restock_Time(Player: Player, Entity: Types.Entity)
+    local Restock_Time = World:get(Entity, Components.Restock_Time)
+    local Previous_Restock_Time = World:get(Entity, Pair(Components.Relationships.Previous, Components.Restock_Time))
+
+    if Restock_Time ~= Previous_Restock_Time then
+        Network.PlayerChanges.RestockTime.Fire(Player, Restock_Time)
+
+        World:set(Entity, Pair(Components.Relationships.Previous, Components.Restock_Time), Restock_Time)
+
+        Log.Info(`{Player.Name}'s restock time was changed to {Restock_Time}`)
+    end
+end
+
+local function Replicate_Stock(Player: Player, Entity: Types.Entity)
+    local Stock = World:get(Entity, Components.Stock)
+    local Previous_Stock = World:get(Entity, Pair(Components.Relationships.Previous, Components.Stock)) or {}
+
+    if not Util.TablesAreEqual(Stock, Previous_Stock) then
+        Network.PlayerChanges.Stock.Fire(Player, Stock)
+
+        World:set(Entity, Pair(Components.Relationships.Previous, Components.Stock), Stock)
+
+        Log.Info(`{Player.Name}'s stock was changed`)
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.PostUpdate,
@@ -126,6 +156,10 @@ return {
             Replicate_Tutorial_Step(Player, Entity)
 
             Replicate_Friend_Boost(Player, Entity)
+
+            Replicate_Restock_Time(Player, Entity)
+
+            Replicate_Stock(Player, Entity)
         end
     end,
     runConditions = {},
