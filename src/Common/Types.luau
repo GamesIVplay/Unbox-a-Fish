@@ -10,7 +10,7 @@ export type SerializedFish = {
     Name: string,
     Mutation: Mutation?,
     Cash: number,
-    OfflineCash: number,
+    Offline_Cash: number,
 }
 
 export type Rarity = "Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret"

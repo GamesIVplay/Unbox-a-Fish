@@ -91,6 +91,7 @@ local function Handle_New_Players()
 
             World:set(PlayerEntity, Components.Tutorial_Step, ProfileData.Tutorial_Step)
             World:set(PlayerEntity, Components.LastPlayed, ProfileData.LastPlayed)
+            World:set(PlayerEntity, Components.Unboxes, ProfileData.Unboxes)
             World:set(PlayerEntity, Components.Restock_Time, ProfileData.Restock_Time)
 
             World:set(PlayerEntity, Pair(Components.Relationships.Queued, Components.Tags.Fish), ProfileData.Fish)
@@ -110,12 +111,6 @@ local function Handle_New_Players()
                     return
                 end
 
-                local PlotEntity = World:target(PlayerEntity, Components.Relationships.Plot)
-
-                if not PlotEntity then
-                    return
-                end
-
                 ProfileData.Cash = World:get(PlayerEntity, Components.Cash)
                 ProfileData.Tool_Level = World:get(PlayerEntity, Components.Tool_Level)
                 ProfileData.Luck_Level = World:get(PlayerEntity, Components.Luck_Level)
@@ -125,6 +120,28 @@ local function Handle_New_Players()
                 ProfileData.Tutorial_Step = World:get(PlayerEntity, Components.Tutorial_Step)
                 ProfileData.LastPlayed = os.time()
                 ProfileData.Restock_Time = World:get(PlayerEntity, Components.Restock_Time)
+                ProfileData.Unboxes = World:get(PlayerEntity, Components.Unboxes)
+
+                local Fish = {}
+
+                for Fish_Entity, Fish_Name: string, Cash: number, Offline_Cash: number, Stand: Model in
+                    World:query(
+                        Components.Name,
+                        Components.Cash,
+                        Pair(Components.Relationships.Offline, Components.Cash),
+                        Components.Stand
+                    ):with(Pair(Components.Relationships.Owner, PlayerEntity))
+
+                do
+                    Fish[tonumber(Stand.Name)] = {
+                        Name = Fish_Name,
+                        Mutation = World:get(Fish_Entity, Components.Mutation),
+                        Cash = Cash,
+                        Offline_Cash = Offline_Cash,
+                    }
+                end
+
+                ProfileData.Fish = Fish
             end)
 
             if Player.Character then
@@ -163,6 +180,10 @@ local function Handle_New_Players()
             end)
 
             Update_Friend_Boosts()
+
+            for _, Fish_Model: Model in World:query(Components.Renderable):with(Components.Tags.Fish) do
+                Network.NewFish.Fire(Player, Fish_Model)
+            end
 
             Log.Info(`Setup {Player.Name}'s entity`)
         end)

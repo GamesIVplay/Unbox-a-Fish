@@ -82,6 +82,7 @@ local function Replicate_Index(Player: Player, Entity: Types.Entity)
     if not Util.TablesAreEqual(Index, Previous_Index) then
         Network.PlayerChanges.Index.Fire(Player, Index)
 
+        World:set(Entity, Components.Index, Index)
         World:set(Entity, Pair(Components.Relationships.Previous, Components.Index), Util.CopyTable(Index, true))
 
         Log.Info(`{Player.Name}'s index was changed`)
@@ -136,7 +137,7 @@ local function Replicate_Stock(Player: Player, Entity: Types.Entity)
 
         World:set(Entity, Pair(Components.Relationships.Previous, Components.Stock), Util.CopyTable(Stock, true))
 
-        warn(`{Player.Name}'s stock was changed`)
+        Log.Info(`{Player.Name}'s stock was changed`)
     end
 end
 

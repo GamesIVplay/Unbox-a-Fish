@@ -77,16 +77,39 @@ function Util.CopyTable(T, Deep)
 end
 
 function Util.TablesAreEqual(T1, T2)
+    if T1 == T2 then
+        return true
+    end
+    if type(T1) ~= "table" or type(T2) ~= "table" then
+        return false
+    end
+
     for I, V in next, T1 do
-        if T2[I] ~= V then
-            return false
+        local Other = T2[I]
+        if type(V) == "table" and type(Other) == "table" then
+            if not Util.TablesAreEqual(V, Other) then
+                return false
+            end
+        else
+            if Other ~= V then
+                return false
+            end
         end
     end
+
     for I, V in next, T2 do
-        if T1[I] ~= V then
-            return false
+        local Other = T1[I]
+        if type(V) == "table" and type(Other) == "table" then
+            if not Util.TablesAreEqual(V, Other) then
+                return false
+            end
+        else
+            if Other ~= V then
+                return false
+            end
         end
     end
+
     return true
 end
 

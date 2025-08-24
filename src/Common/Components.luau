@@ -13,6 +13,7 @@ local Components: {
     Luck_Level: Types.Id<number>,
     Index: Types.Id<{ any }>,
     Crate_Queue: Types.Id<{ [number]: string }>,
+    Unboxes: Types.Id<number>,
 
     Name: Types.Id<string>,
     Mutation: Types.Id<Types.Mutation>,
@@ -36,6 +37,8 @@ local Components: {
 
     Health: Types.Id<number>,
 
+    Stand: Types.Id<Model>,
+
     Tags: {
         Networked: Types.Entity,
         Plot: Types.Entity,
@@ -43,6 +46,8 @@ local Components: {
         Notification: Types.Entity,
         Crate: Types.Entity,
         Opening: Types.Entity,
+        DoubleSlots: Types.Entity,
+        DoubleMoney: Types.Entity,
     },
 
     Relationships: {
@@ -53,6 +58,7 @@ local Components: {
         Offline: Types.Entity,
         Queued: Types.Entity,
         Crate: Types.Entity,
+        Fish: Types.Entity,
     },
 } =
     {
@@ -65,6 +71,7 @@ local Components: {
         Luck_Level = World:component(),
         Index = World:component(),
         Crate_Queue = World:component(),
+        Unboxes = World:component(),
 
         Name = World:component(),
         Mutation = World:component(),
@@ -88,6 +95,8 @@ local Components: {
 
         Health = World:component(),
 
+        Stand = World:component(),
+
         Tags = {
             Networked = World:component(),
             Plot = World:component(),
@@ -95,6 +104,8 @@ local Components: {
             Notification = World:component(),
             Crate = World:component(),
             Opening = World:component(),
+            DoubleSlots = World:component(),
+            DoubleMoney = World:component(),
         },
         Relationships = {
             Max = World:component(),
@@ -104,6 +115,7 @@ local Components: {
             Offline = World:component(),
             Queued = World:component(),
             Crate = World:component(),
+            Fish = World:component(),
         },
     }
 

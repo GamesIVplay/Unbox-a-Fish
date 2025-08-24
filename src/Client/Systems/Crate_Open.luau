@@ -35,9 +35,9 @@ local Roll_Fish = require(ReplicatedStorage.Common.Modules.Roll_Fish)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
 -- Configurable tunables
-local BASE_CYCLE_DURATION = 6 -- total cycle time (seconds)
-local BASE_ROLL_INTERVAL = 0.15 -- starting time between rolls
-local BASE_ROLL_INCREMENT = 0.005 -- how much interval grows each roll (slowdown)
+local BASE_CYCLE_DURATION = 4 -- total cycle time (seconds)
+local BASE_ROLL_INTERVAL = 0.1 -- starting time between rolls
+local BASE_ROLL_INCREMENT = 0.025 -- how much interval grows each roll (slowdown)
 
 local START_SCALE = 0.1
 local END_SCALE = 1
@@ -256,8 +256,7 @@ return {
 
                     Debris:AddItem(NewPart, 3)
 
-                    -- Crate break after 6s
-                    task.delay(6, function()
+                    task.delay(4, function()
                         local Part = Instance.new("Part")
                         Part.Transparency = 1
                         Part.CFrame = CF * CFrame.new(0, 4, 0)
@@ -274,6 +273,11 @@ return {
                             end
                         end
                         Debris:AddItem(Part, 3)
+
+                        local Cycle_Sound = Brainrot_Cycle_Sound:Clone()
+                        Cycle_Sound.PlayOnRemove = true
+                        Cycle_Sound.Parent = Part
+                        Cycle_Sound:Destroy()
 
                         Model:Destroy()
                     end)

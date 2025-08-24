@@ -29,6 +29,20 @@ event BounceCrate {
     Data: Instance(Model)
 }
 
+event NewFish {
+    From: Server,
+    Type: Reliable,
+    Call: SingleSync,
+    Data: Instance(Model)
+}
+
+event AddOwnedHighlight {
+    From: Server,
+    Type: Reliable,
+    Call: SingleSync,
+    Data: Instance(Model)
+}
+
 event OpenTrapEffect {
     From: Server,
     Type: Reliable,
@@ -76,6 +90,13 @@ scope Requests {
        Type: Reliable,
        Call: SingleSync,
     }   
+
+    event Collect {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync,
+       Data: Types.Entity
+    }
 }
 
 scope PlayerChanges {

@@ -1,15 +1,22 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Crates_Folder = workspace:WaitForChild("Crates")
+local TweenService = game:GetService("TweenService")
 
 local Assets = ReplicatedStorage:WaitForChild("Assets")
+
+local Highlights = Assets:WaitForChild("Highlights")
+local Owned_Highlight = Highlights:WaitForChild("Owned") :: Highlight
+
+local SimpleZone = require(Assets.SimpleZone) :: any
 
 local Billboards = Assets:WaitForChild("Billboards")
 local YourPlot_Billboard = Billboards:WaitForChild("YourPlot") :: BillboardGui
 
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
+
+local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
+local Collect_Rate_Limit = Ratelimit(1, 1)
 
 local Network = require(ReplicatedFirst.Network)
 
@@ -20,10 +27,11 @@ local World = require(ReplicatedStorage.Common.World)
 
 local Types = require(ReplicatedStorage.Common.Types)
 
+local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
-local CRATE_BOUNCE_TIME = 0.08
-local Crate_Bounce_Tween_Info = TweenInfo.new(CRATE_BOUNCE_TIME, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+local BOUNCE_TIME = 0.08
+local Bounce_Tween_Info = TweenInfo.new(BOUNCE_TIME, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
 
 local Fusion_Values = require(ReplicatedFirst.Client.Modules.Fusion_Values)
 
@@ -76,8 +84,53 @@ local function Handle_Friend_Boost_Changes(LocalEntity: Types.Entity)
 end
 
 local function Handle_Plot_Assign(LocalEntity: Types.Entity)
+    local LocalPlayer = World:get(LocalEntity, Components.Player) :: Player
+
     for _, Value in Network.PlayerChanges.PlotChosen.Iter() do
         YourPlot_Billboard:Clone().Parent = Value
+
+        local Stands = Value:FindFirstChild("Stands")
+
+        for _, Stand_Model in Stands:GetChildren() do
+            local Collect_Model = Stand_Model:FindFirstChild("Collect")
+            local Touch_Part = Collect_Model:FindFirstChild("Touch") :: Part
+
+            local Tween_Up = TweenService:Create(Touch_Part, Bounce_Tween_Info, {
+                Position = Touch_Part.Position,
+            })
+
+            local Tween_Down = TweenService:Create(Touch_Part, Bounce_Tween_Info, {
+                Position = Touch_Part.Position - Vector3.new(0, 0.35, 0),
+            })
+
+            local Collect_Zone = SimpleZone.fromPart(Touch_Part)
+
+            Collect_Zone:BindToHeartbeat()
+
+            Collect_Zone:ListenTo("Player", "Entered", function(TargetPlayer: Player)
+                if TargetPlayer ~= LocalPlayer then
+                    return
+                end
+
+                if not Collect_Rate_Limit(Stand_Model) then
+                    return
+                end
+
+                local ServerEntity = Stand_Model:GetAttribute("ServerEntity")
+
+                if not ServerEntity then
+                    return
+                end
+
+                Network.Requests.Collect.Fire(ServerEntity)
+
+                Tween_Down:Play()
+
+                task.wait(0.8)
+
+                Tween_Up:Play()
+            end)
+        end
 
         local Skip = Value:FindFirstChild("Skip") :: Model
         local Skip_Screen = Skip:FindFirstChild("Screen") :: Part
@@ -129,17 +182,46 @@ end
 
 local function Handle_Crate_Bounces()
     for _, Value in Network.BounceCrate.Iter() do
-        if not Value:IsDescendantOf(Crates_Folder) then
+        if not Value:IsDescendantOf(workspace) then
             continue
         end
 
         task.spawn(function()
-            Util.Tween_Model_Scale(1, 0.8, Crate_Bounce_Tween_Info, Value)
+            Util.Tween_Model_Scale(1, 0.8, Bounce_Tween_Info, Value)
 
-            task.wait(CRATE_BOUNCE_TIME)
+            task.wait(BOUNCE_TIME)
 
-            Util.Tween_Model_Scale(0.8, 1, Crate_Bounce_Tween_Info, Value)
+            Util.Tween_Model_Scale(0.8, 1, Bounce_Tween_Info, Value)
         end)
+    end
+end
+
+local function Handle_New_Fish()
+    for _, Value in Network.NewFish.Iter() do
+        if not Value:IsDescendantOf(workspace) then
+            continue
+        end
+
+        local Animator = Value:FindFirstChild("Animator", true) :: Animator
+        AnimPlayer.Load(Animator)
+        AnimPlayer.PlayAnimation(Animator, {
+            Name = "Fish [Idle]",
+            Loop = true,
+        })
+
+        task.spawn(function()
+            Util.Tween_Model_Scale(1, 0.8, Bounce_Tween_Info, Value)
+
+            task.wait(BOUNCE_TIME)
+
+            Util.Tween_Model_Scale(0.8, 1, Bounce_Tween_Info, Value)
+        end)
+    end
+end
+
+local function Handle_Owned_Highlight()
+    for _, Value in Network.AddOwnedHighlight.Iter() do
+        Owned_Highlight:Clone().Parent = Value
     end
 end
 
@@ -168,6 +250,10 @@ return {
         Handle_Stock_Changes(LocalEntity)
 
         Handle_Crate_Bounces()
+
+        Handle_New_Fish()
+
+        Handle_Owned_Highlight()
     end,
     runConditions = {},
 }

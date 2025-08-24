@@ -11,6 +11,7 @@ Start({
     require(Systems.Plot_Setup),
     require(Systems.Player_Session),
     require(Systems.Plot_Assign),
+    require(Systems.Plot_Loader),
     require(Systems.Upgrade_Tool),
     require(Systems.Upgrade_Luck),
     require(Systems.Restock),
@@ -20,5 +21,9 @@ Start({
     require(Systems.Swing),
     require(Systems.Crate_Display),
     require(Systems.Crate_Open),
+    require(Systems.Cash_Generator),
+    require(Systems.Collect),
+    require(Systems.Fish_Cleanup),
+    require(Systems.Leaderstats),
     require(Systems.Player_Data_Replication),
 })

@@ -2,6 +2,12 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
+local ImpactHaptic = Instance.new("HapticEffect")
+ImpactHaptic.Position = Vector3.new(0, 0, 0)
+ImpactHaptic.Radius = 1
+ImpactHaptic.Type = Enum.HapticEffectType.UIHover
+ImpactHaptic.Parent = workspace
+
 local Network = require(ReplicatedFirst.Network)
 
 local Crates_Folder = workspace:WaitForChild("Crates")
@@ -124,6 +130,12 @@ return {
                 Hitbox:Stop()
 
                 Network.Requests.Swing.Fire(Hit_Crate_Entity)
+
+                if Hit_Crate_Entity then
+                    task.delay(0.1, function()
+                        ImpactHaptic:Play()
+                    end)
+                end
             end)
         end
     end,

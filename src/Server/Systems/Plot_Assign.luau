@@ -26,6 +26,23 @@ return {
     name = script.Name,
     phase = Phases.Runservice.PreUpdate,
     system = function()
+        for Plot_Entity, PlotModel: Model in Plots_Without_Owner:iter() do
+            local Avatar = PlotModel:FindFirstChild("Avatar", true) :: ImageLabel
+            local Title = PlotModel:FindFirstChild("Title", true) :: TextLabel
+
+            Avatar.Image = ""
+            Title.Text = ""
+
+            Avatar.Visible = false
+            Title.Visible = false
+
+            local Crate_Entity = World:target(Plot_Entity, Components.Relationships.Crate)
+
+            if Crate_Entity then
+                World:delete(Crate_Entity)
+            end
+        end
+
         for PlayerEntity, Player: Player, Character: Model in Players_Without_Plot:iter() do
             for PlotNumber = 1, 8 do
                 local PlotEntity = Registry.Get("Plots", PlotNumber)
@@ -59,17 +76,6 @@ return {
                 Network.PlayerChanges.PlotChosen.Fire(Player, PlotModel)
                 break
             end
-        end
-
-        for _, PlotModel: Model in Plots_Without_Owner:iter() do
-            local Avatar = PlotModel:FindFirstChild("Avatar", true) :: ImageLabel
-            local Title = PlotModel:FindFirstChild("Title", true) :: TextLabel
-
-            Avatar.Image = ""
-            Title.Text = ""
-
-            Avatar.Visible = false
-            Title.Visible = false
         end
     end,
     runConditions = {},

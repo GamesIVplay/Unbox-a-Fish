@@ -1,6 +1,13 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
+local Assets = ReplicatedStorage:WaitForChild("Assets")
+
+local Sounds = Assets:WaitForChild("Sounds")
+
+local World_Sounds = Sounds:WaitForChild("World")
+local Crate_Spawn_Sound = World_Sounds:WaitForChild("CrateSpawn") :: Sound
+
 local Network = require(ServerScriptService.Network)
 
 local Crates_Folder = workspace:WaitForChild("Crates")
@@ -68,6 +75,10 @@ return {
 
                 table.remove(Crate_Queue, 1)
 
+                Network.Notification.Fire(Owner_Player, {
+                    Text = `Your queued {Crate_Name} spawned!`,
+                })
+
                 World:set(Owner_Entity, Components.Crate_Queue, Crate_Queue)
             else
                 Crate_Name, Crate_Data = Roll_Crate(Luck_Multiplier)
@@ -78,6 +89,13 @@ return {
             Crate_Model:SetAttribute("Owner", Owner_Player.UserId)
 
             Crate_Model.Parent = Crates_Folder
+
+            local PrimaryPart = Crate_Model.PrimaryPart
+
+            local Spawn_Sound = Crate_Spawn_Sound:Clone()
+            Spawn_Sound.PlayOnRemove = true
+            Spawn_Sound.Parent = PrimaryPart
+            Spawn_Sound:Destroy()
 
             Network.BounceCrate.FireAll(Crate_Model)
 
@@ -90,6 +108,8 @@ return {
 
             World:add(Crate_Entity, Components.Tags.Crate)
             World:add(Crate_Entity, Components.Tags.Networked)
+            World:add(Crate_Entity, Pair(Components.Relationships.Owner, Plot_Entity))
+
             World:add(Plot_Entity, Pair(Components.Relationships.Crate, Crate_Entity))
 
             World:set(Crate_Entity, Components.Cleanup, function()
