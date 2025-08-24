@@ -8,9 +8,6 @@ local Crate_Overhead = Billboards:WaitForChild("Crate_Overhead") :: BillboardGui
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
 
-local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
-local Dislay_Rate_Limit = Ratelimit(1, 1)
-
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
 local World = require(ReplicatedStorage.Common.World)
@@ -31,10 +28,6 @@ return {
         for Crate_Entity, Crate_Name: string, Crate_Health: number, Crate_Max_Health: number, Crate_Model: Model in
             Crate_Query:iter()
         do
-            if not Dislay_Rate_Limit(Crate_Entity) then
-                continue
-            end
-
             local Overhead_Attachment = Crate_Model:FindFirstChild("Overhead_Attachment", true)
 
             local Crate_OH = Overhead_Attachment:FindFirstChildOfClass("BillboardGui")

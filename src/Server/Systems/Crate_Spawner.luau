@@ -1,4 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local Network = require(ServerScriptService.Network)
 
 local Crates_Folder = workspace:WaitForChild("Crates")
 
@@ -75,6 +78,8 @@ return {
             Crate_Model:SetAttribute("Owner", Owner_Player.UserId)
 
             Crate_Model.Parent = Crates_Folder
+
+            Network.BounceCrate.FireAll(Crate_Model)
 
             local Crate_Entity = World:entity()
 

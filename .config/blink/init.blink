@@ -22,6 +22,28 @@ event Notification {
     }
 }
 
+event BounceCrate {
+    From: Server,
+    Type: Reliable,
+    Call: SingleSync,
+    Data: Instance(Model)
+}
+
+event OpenTrapEffect {
+    From: Server,
+    Type: Reliable,
+    Call: SingleSync,
+    Data: struct {
+        Owner: f64,
+        Crate: string,
+        CF: CFrame,
+        Result: struct {
+            Name: string,
+            Mutation: Types.Mutation?
+        }
+    }
+}
+
 scope Requests {
     event UpgradeTool {
        From: Client,
@@ -41,6 +63,19 @@ scope Requests {
        Call: SingleSync,
        Data: string
     }
+
+    event Swing {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync,
+       Data: Types.Entity?
+    }
+
+    event SkipCrate {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync,
+    }   
 }
 
 scope PlayerChanges {

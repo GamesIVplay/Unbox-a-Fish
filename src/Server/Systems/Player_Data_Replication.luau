@@ -134,9 +134,9 @@ local function Replicate_Stock(Player: Player, Entity: Types.Entity)
     if not Util.TablesAreEqual(Stock, Previous_Stock) then
         Network.PlayerChanges.Stock.Fire(Player, Stock)
 
-        World:set(Entity, Pair(Components.Relationships.Previous, Components.Stock), Stock)
+        World:set(Entity, Pair(Components.Relationships.Previous, Components.Stock), Util.CopyTable(Stock, true))
 
-        Log.Info(`{Player.Name}'s stock was changed`)
+        warn(`{Player.Name}'s stock was changed`)
     end
 end
 

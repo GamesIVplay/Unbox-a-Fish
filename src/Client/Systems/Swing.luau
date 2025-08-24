@@ -1,5 +1,8 @@
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
+
+local Network = require(ReplicatedFirst.Network)
 
 local Crates_Folder = workspace:WaitForChild("Crates")
 
@@ -24,7 +27,7 @@ local TouchTap = Collect(UserInputService.TouchTap)
 local SwingParams = OverlapParams.new()
 SwingParams.FilterType = Enum.RaycastFilterType.Include
 
-local REACH = 10
+local REACH = 12
 
 return {
     name = script.Name,
@@ -101,9 +104,9 @@ return {
                 Hitbox.Size = Vector3.new(10, 10, REACH)
                 Hitbox.OverlapParams = SwingParams
                 Hitbox.DetectionMode = "HitParts"
-                Hitbox.Visualizer = _G.IN_DEV
+                Hitbox.Visualizer = false
 
-                local HitCrate
+                local Hit_Crate_Entity
 
                 Hitbox.Touched:Connect(function(Hit)
                     local Crate = Hit.Parent :: Model
@@ -112,13 +115,15 @@ return {
                         return
                     end
 
-                    HitCrate = Crate
+                    Hit_Crate_Entity = Crate:GetAttribute("ServerEntity")
                 end)
 
-                task.wait(0.15)
+                task.wait(0.05)
                 Hitbox:Start()
                 task.wait(0.15)
                 Hitbox:Stop()
+
+                Network.Requests.Swing.Fire(Hit_Crate_Entity)
             end)
         end
     end,

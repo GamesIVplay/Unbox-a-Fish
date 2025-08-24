@@ -107,6 +107,8 @@ function Util.Tween_Model_Scale(StartScale, EndScale, TweenInfo, Model)
     end
 
     TweenConnection = RunService.Heartbeat:Connect(OnStep)
+
+    return TweenConnection
 end
 
 function Util.Format_Number_With_Commas(Number)

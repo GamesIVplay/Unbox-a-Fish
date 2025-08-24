@@ -14,10 +14,10 @@ local Mutations: { [Types.Mutation]: Mutation } = {
         Chance = 0.02,
         Multiplier = 3,
     },
-    ["Huge"] = {
+    --[[    ["Huge"] = {
         Chance = 0.015,
         Multiplier = 3.5,
-    },
+    }, ]]
     ["Rainbow"] = {
         Chance = 0.01,
         Multiplier = 4,

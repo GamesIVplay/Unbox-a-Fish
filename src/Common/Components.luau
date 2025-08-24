@@ -42,6 +42,7 @@ local Components: {
         Fish: Types.Entity,
         Notification: Types.Entity,
         Crate: Types.Entity,
+        Opening: Types.Entity,
     },
 
     Relationships: {
@@ -93,6 +94,7 @@ local Components: {
             Fish = World:component(),
             Notification = World:component(),
             Crate = World:component(),
+            Opening = World:component(),
         },
         Relationships = {
             Max = World:component(),

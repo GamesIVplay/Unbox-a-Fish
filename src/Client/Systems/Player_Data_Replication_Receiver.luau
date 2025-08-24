@@ -1,6 +1,8 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Crates_Folder = workspace:WaitForChild("Crates")
+
 local Assets = ReplicatedStorage:WaitForChild("Assets")
 
 local Billboards = Assets:WaitForChild("Billboards")
@@ -17,6 +19,11 @@ local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
 
 local Types = require(ReplicatedStorage.Common.Types)
+
+local Util = require(ReplicatedStorage.Common.Modules.Util)
+
+local CRATE_BOUNCE_TIME = 0.08
+local Crate_Bounce_Tween_Info = TweenInfo.new(CRATE_BOUNCE_TIME, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
 
 local Fusion_Values = require(ReplicatedFirst.Client.Modules.Fusion_Values)
 
@@ -72,6 +79,27 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
     for _, Value in Network.PlayerChanges.PlotChosen.Iter() do
         YourPlot_Billboard:Clone().Parent = Value
 
+        local Skip = Value:FindFirstChild("Skip") :: Model
+        local Skip_Screen = Skip:FindFirstChild("Screen") :: Part
+
+        local SkipPrompt = Instance.new("ProximityPrompt")
+        SkipPrompt.ClickablePrompt = true
+        SkipPrompt.Enabled = true
+        SkipPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+        SkipPrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+        SkipPrompt.KeyboardKeyCode = Enum.KeyCode.E
+        SkipPrompt.MaxActivationDistance = 10
+        SkipPrompt.RequiresLineOfSight = false
+        SkipPrompt.HoldDuration = 0.5
+        SkipPrompt.ActionText = "Skip ⏩"
+        SkipPrompt.ObjectText = ""
+        SkipPrompt.Style = Enum.ProximityPromptStyle.Custom
+        SkipPrompt.Parent = Skip_Screen
+
+        SkipPrompt.Triggered:Connect(function()
+            Network.Requests.SkipCrate.Fire()
+        end)
+
         local PlotEntity = World:entity()
 
         World:set(PlotEntity, Components.Renderable, Value)
@@ -99,6 +127,22 @@ local function Handle_Stock_Changes(LocalEntity: Types.Entity)
     end
 end
 
+local function Handle_Crate_Bounces()
+    for _, Value in Network.BounceCrate.Iter() do
+        if not Value:IsDescendantOf(Crates_Folder) then
+            continue
+        end
+
+        task.spawn(function()
+            Util.Tween_Model_Scale(1, 0.8, Crate_Bounce_Tween_Info, Value)
+
+            task.wait(CRATE_BOUNCE_TIME)
+
+            Util.Tween_Model_Scale(0.8, 1, Crate_Bounce_Tween_Info, Value)
+        end)
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -122,6 +166,8 @@ return {
         Handle_Restock_Time(LocalEntity)
 
         Handle_Stock_Changes(LocalEntity)
+
+        Handle_Crate_Bounces()
     end,
     runConditions = {},
 }

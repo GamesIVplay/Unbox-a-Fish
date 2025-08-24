@@ -16,6 +16,9 @@ Start({
     require(Systems.Restock),
     require(Systems.Crate_Buy),
     require(Systems.Crate_Spawner),
+    require(Systems.Skip_Crate),
+    require(Systems.Swing),
     require(Systems.Crate_Display),
+    require(Systems.Crate_Open),
     require(Systems.Player_Data_Replication),
 })

@@ -583,7 +583,7 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
             Text = Scope:Computed(function(Use)
                 local Current_Stock = Use(Fusion_Values.Stock)
 
-                return `x{Current_Stock[Crate_Name] or 0}`
+                return `x{Current_Stock[Crate_Name] and Current_Stock[Crate_Name] or 0}`
             end),
         })
 
