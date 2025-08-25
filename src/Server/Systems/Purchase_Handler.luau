@@ -60,6 +60,33 @@ local Grant_Purchase_By_Product_Id = {
 
         return true
     end,
+    [ProductIds["One Time Offer"]] = function(_, Player_Entity: Types.Entity)
+        local Crate_Queue = World:get(Player_Entity, Components.Crate_Queue)
+
+        table.insert(Crate_Queue, "Abyssal Crate")
+
+        local Inventory = World:get(Player_Entity, Components.Inventory)
+
+        if not Inventory["Normal"] then
+            Inventory["Normal"] = {}
+        end
+
+        if not Inventory["Normal"]["Bombardiro Crocodilo"] then
+            Inventory["Normal"]["Bombardiro Crocodilo"] = 1
+        else
+            Inventory["Normal"]["Bombardiro Crocodilo"] += 1
+        end
+
+        if not Inventory["Normal"]["Pipi Kiwi"] then
+            Inventory["Normal"]["Pipi Kiwi"] = 1
+        else
+            Inventory["Normal"]["Pipi Kiwi"] += 1
+        end
+
+        World:add(Player_Entity, Components.Tags.BoughtOneTimeOffer)
+
+        return true
+    end,
 }
 
 local function ProcessReceipt(ReceiptInfo)

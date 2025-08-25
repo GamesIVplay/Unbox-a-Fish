@@ -456,6 +456,18 @@ local function Handle_Confetti(LocalEntity: Types.Entity)
     end
 end
 
+local function Handle_One_Time_Offer_Bought(LocalEntity: Types.Entity)
+    for _, Value in Network.PlayerChanges.BoughtOneTimeOffer.Iter() do
+        Fusion_Values.Bought_One_Time_Offer:set(Value)
+
+        if Value == true then
+            World:add(LocalEntity, Components.Tags.BoughtOneTimeOffer)
+        else
+            World:remove(LocalEntity, Components.Tags.BoughtOneTimeOffer)
+        end
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -491,6 +503,8 @@ return {
         Handle_Tutorial_Attachment(LocalEntity)
 
         Handle_Confetti(LocalEntity)
+
+        Handle_One_Time_Offer_Bought(LocalEntity)
     end,
     runConditions = {},
 }

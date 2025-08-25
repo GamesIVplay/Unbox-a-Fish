@@ -94,6 +94,10 @@ local function Handle_New_Players()
                 ProfileData.Tutorial_Step ~= 4 and ProfileData.Tutorial_Step or 5
             )
 
+            if ProfileData.BoughtOneTimeOffer then
+                World:add(PlayerEntity, Components.Tags.BoughtOneTimeOffer)
+            end
+
             World:set(PlayerEntity, Components.LastPlayed, ProfileData.LastPlayed)
             World:set(PlayerEntity, Components.Unboxes, ProfileData.Unboxes)
             World:set(PlayerEntity, Components.Restock_Time, ProfileData.Restock_Time)
@@ -126,6 +130,7 @@ local function Handle_New_Players()
                 ProfileData.LastPlayed = os.time()
                 ProfileData.Restock_Time = World:get(PlayerEntity, Components.Restock_Time)
                 ProfileData.Unboxes = World:get(PlayerEntity, Components.Unboxes)
+                ProfileData.BoughtOneTimeOffer = World:has(PlayerEntity, Components.Tags.BoughtOneTimeOffer)
 
                 local Fish = {}
 

@@ -73,6 +73,15 @@ return {
                 continue
             end
 
+            local Plot_Entity = World:target(Player_Entity, Components.Relationships.Plot)
+
+            if not Plot_Entity then
+                continue
+            end
+
+            local Plot_Model = World:get(Plot_Entity, Components.Renderable) :: Model
+            local Plot_Spawn = Plot_Model:FindFirstChild("Spawn") :: Part
+
             local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
 
             if Tutorial_Step == 4 then
@@ -82,6 +91,8 @@ return {
                     })
                     continue
                 end
+
+                Character:PivotTo(Plot_Spawn.CFrame)
 
                 World:set(Player_Entity, Components.Tutorial_Step, 5)
             elseif Tutorial_Step < 11 then

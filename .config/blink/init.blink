@@ -208,4 +208,11 @@ scope PlayerChanges {
         Call: SingleSync,
         Data: Types.Stock 
     }
+     
+    event BoughtOneTimeOffer {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: boolean
+    }
 }

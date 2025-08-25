@@ -49,6 +49,7 @@ local Components: {
         Opening: Types.Entity,
         DoubleSlots: Types.Entity,
         DoubleMoney: Types.Entity,
+        BoughtOneTimeOffer: Types.Entity,
     },
 
     Relationships: {
@@ -108,6 +109,7 @@ local Components: {
             Opening = World:component(),
             DoubleSlots = World:component(),
             DoubleMoney = World:component(),
+            BoughtOneTimeOffer = World:component(),
         },
         Relationships = {
             Max = World:component(),

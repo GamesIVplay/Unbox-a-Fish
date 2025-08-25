@@ -293,23 +293,25 @@ local function Handle_Sell_All_Requests()
         Cash_Sound.Parent = RootPart
         Cash_Sound:Destroy()
 
-        local Highlight = Sell_Highlight:Clone()
-        Highlight.Parent = Character
+        if Tutorial_Step ~= 9 then
+            local Highlight = Sell_Highlight:Clone()
+            Highlight.Parent = Character
 
-        Debris:AddItem(Highlight, 0.15)
+            Debris:AddItem(Highlight, 0.15)
 
-        local VFX = Sell_VFX:Clone()
-        VFX.Parent = RootPart
+            local VFX = Sell_VFX:Clone()
+            VFX.Parent = RootPart
 
-        for _, Inst: ParticleEmitter in VFX:GetDescendants() do
-            if Inst:IsA("ParticleEmitter") then
-                local EmitCount = Inst:GetAttribute("EmitCount") or 1
+            for _, Inst: ParticleEmitter in VFX:GetDescendants() do
+                if Inst:IsA("ParticleEmitter") then
+                    local EmitCount = Inst:GetAttribute("EmitCount") or 1
 
-                Inst:Emit(EmitCount)
+                    Inst:Emit(EmitCount)
+                end
             end
-        end
 
-        Debris:AddItem(VFX, 5)
+            Debris:AddItem(VFX, 5)
+        end
 
         Network.EndDialouge.Fire(Player, `Sold inventory for ${Util.Format_Number_With_Commas(Cash_Earned)}`)
     end

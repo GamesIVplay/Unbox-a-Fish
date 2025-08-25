@@ -13,7 +13,7 @@ type ProfileData = {
         [string]: { string },
     },
     Inventory: {
-        [string]: { string },
+        [string]: { [string]: number },
     },
     Crate_Queue: {
         [number]: string,
@@ -28,6 +28,7 @@ type ProfileData = {
     Restock_Time: number,
     LastPlayed: number,
     Unboxes: number,
+    BoughtOneTimeOffer: boolean,
 }
 
 local ProfileStore = require(ReplicatedStorage.Packages.ProfileStore)
@@ -46,6 +47,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Restock_Time = os.time() + 60 * 2,
     LastPlayed = os.time(),
     Unboxes = 0,
+    BoughtOneTimeOffer = false,
 }
 
 local PlayerProfileStore = ProfileStore.New("Testing10123", PLAYER_DATA_TEMPLATE)

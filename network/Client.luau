@@ -167,6 +167,7 @@ Queue.Reliable[24] = CreateQueue()
 Queue.Reliable[25] = CreateQueue()
 Queue.Reliable[26] = CreateQueue()
 Queue.Reliable[27] = CreateQueue()
+Queue.Reliable[28] = CreateQueue()
 export type Types_Entity = number
 export type Types_Cash = number
 export type Types_ToolLevel = number
@@ -469,6 +470,13 @@ local function PlayerChanges_ReadEVENT_Stock(): ({[string]: number})
 	return Value
 end
 
+local function PlayerChanges_ReadEVENT_BoughtOneTimeOffer(): (boolean)
+	-- Read BLOCK: 1 bytes
+	local BLOCK_START = Read(1)
+	local Value = (buffer.readu8(RecieveBuffer, BLOCK_START + 0) == 1)
+	return Value
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -578,6 +586,10 @@ if not RunService:IsRunning() then
 			Iter = NOOP,
 			Next = NOOP
 		},
+		BoughtOneTimeOffer = {
+			Iter = NOOP,
+			Next = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -650,6 +662,8 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 			Push(Queue.Reliable[26], table.pack(PlayerChanges_ReadEVENT_RestockTime()))
 		elseif Index == 27 then
 			Push(Queue.Reliable[27], table.pack(PlayerChanges_ReadEVENT_Stock()))
+		elseif Index == 28 then
+			Push(Queue.Reliable[28], table.pack(PlayerChanges_ReadEVENT_BoughtOneTimeOffer()))
 		end
 	end
 end)
@@ -1180,6 +1194,33 @@ local Returns = table.freeze({
 				local index = 0
 				local queue = Queue.Reliable[27]
 				return function (): (number, {[string]: number})
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		BoughtOneTimeOffer = {
+			Iter = function(): () -> (number, boolean)
+				local index = 0
+				local queue = Queue.Reliable[28]
+				return function (): (number, boolean)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, boolean)
+				local index = 0
+				local queue = Queue.Reliable[28]
+				return function (): (number, boolean)
 					index += 1
 					local arguments = Pop(queue)
 					if arguments ~= nil then

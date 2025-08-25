@@ -12,4 +12,5 @@ return table.freeze({
     Friend_Boost = Scope:Value(1),
     Restock_Time = Scope:Value(0),
     Stock = Scope:Value({}),
+    Bought_One_Time_Offer = Scope:Value(true),
 })

@@ -89,7 +89,7 @@ return {
             local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name)
 
             if Tutorial_Step == 0 then
-                Fish_Mutation = "Normal"
+                Fish_Mutation = nil
             end
 
             Network.OpenTrapEffect.FireAll({

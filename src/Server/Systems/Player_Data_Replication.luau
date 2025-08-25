@@ -249,6 +249,22 @@ local function Replicate_Stock(Player: Player, Entity: Types.Entity)
     end
 end
 
+local function Replicate_Bought_One_Time_Offer(Player: Player, Entity: Types.Entity)
+    local Bought_One_Time_Offer = World:has(Entity, Components.Tags.BoughtOneTimeOffer)
+    local Previous_Bought_One_Time_Offer =
+        World:get(Entity, Pair(Components.Relationships.Previous, Components.Tags.BoughtOneTimeOffer))
+
+    if Bought_One_Time_Offer ~= Previous_Bought_One_Time_Offer then
+        Network.PlayerChanges.BoughtOneTimeOffer.Fire(Player, Bought_One_Time_Offer)
+
+        World:set(
+            Entity,
+            Pair(Components.Relationships.Previous, Components.Tags.BoughtOneTimeOffer),
+            Bought_One_Time_Offer
+        )
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.PostUpdate,
@@ -271,6 +287,8 @@ return {
             Replicate_Restock_Time(Player, Entity)
 
             Replicate_Stock(Player, Entity)
+
+            Replicate_Bought_One_Time_Offer(Player, Entity)
         end
     end,
     runConditions = {},

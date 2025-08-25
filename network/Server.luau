@@ -456,6 +456,13 @@ local function PlayerChanges_WriteEVENT_Stock(Value: {[string]: number}): ()
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
 end
 
+local function PlayerChanges_WriteEVENT_BoughtOneTimeOffer(Value: boolean): ()
+	-- Allocate BLOCK: 2 bytes
+	local BLOCK_START = Allocate(2)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 28)
+	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value and 1 or 0)
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -605,6 +612,12 @@ if not RunService:IsRunning() then
 			FireExcept = NOOP
 		},
 		Stock = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
+		},
+		BoughtOneTimeOffer = {
 			Fire = NOOP,
 			FireAll = NOOP,
 			FireList = NOOP,
@@ -1781,6 +1794,52 @@ local Returns = table.freeze({
 			FireExcept = function(Except: Player, Value: {[string]: number}): ()
 				Load()
 				PlayerChanges_WriteEVENT_Stock(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+		},
+		BoughtOneTimeOffer = {
+			Fire = function(Player: Player, Value: boolean): ()
+				Load(PlayersMap[Player])
+				PlayerChanges_WriteEVENT_BoughtOneTimeOffer(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: boolean): ()
+				Load()
+				PlayerChanges_WriteEVENT_BoughtOneTimeOffer(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: boolean): ()
+				Load()
+				PlayerChanges_WriteEVENT_BoughtOneTimeOffer(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: boolean): ()
+				Load()
+				PlayerChanges_WriteEVENT_BoughtOneTimeOffer(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then

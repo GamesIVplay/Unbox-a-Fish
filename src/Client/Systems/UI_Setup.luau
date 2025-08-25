@@ -23,7 +23,6 @@ local Upgrade_Shop_Npc = Upgrade_Shop:WaitForChild("Npc") :: Model
 local Upgrade_Shop_Teleport = Upgrade_Shop:WaitForChild("Teleport") :: Part
 
 local Sell_Shop = Interactables:WaitForChild("Sell_Shop") :: Model
-local Sell_Shop_Npc = Sell_Shop:WaitForChild("Npc") :: Model
 local Sell_Shop_Teleport = Sell_Shop:WaitForChild("Teleport") :: Part
 
 local Crate_Shop = Interactables:WaitForChild("Crate_Shop") :: Model
@@ -220,6 +219,8 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     local Tutorial_Arrow = HUD:WaitForChild("Tutorial_Arrow") :: ImageLabel
 
+    local OneTimeOffer = HUD:WaitForChild("OneTimeOffer")
+
     Hydrate_Button(House, function()
         local PlotEntity = World:target(LocalEntity, Components.Relationships.Plot)
 
@@ -320,6 +321,12 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
         end
     end)
 
+    Scope:Hydrate(Store)({
+        Visible = Scope:Computed(function(Use)
+            return (Use(Fusion_Values.Tutorial_Step) > 9)
+        end),
+    })
+
     Hydrate_Button(Index, function()
         if Peek(Fusion_Values.Screen) == "Index" then
             Fusion_Values.Screen:set("HUD")
@@ -328,16 +335,22 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
         end
     end)
 
+    Scope:Hydrate(Index)({
+        Visible = Scope:Computed(function(Use)
+            return (Use(Fusion_Values.Tutorial_Step) > 9)
+        end),
+    })
+
     local Tutorial_Text_Value = Scope:Value("")
 
     local Tutorial_Text_Options = {
-        [0] = "Break the wood crate",
+        [0] = "Break the Wood Crate",
         [1] = "Wait for a new fish",
         [2] = "Collect your cash",
         [3] = "Upgrade your hammer",
-        [4] = "Buy a mossy crate",
+        [4] = "Buy a Mossy Crate",
         [5] = "Skip the crate",
-        [6] = "Break the mossy crate",
+        [6] = "Break the Mossy Crate",
         [7] = "Wait for a fish",
         [8] = "Pickup your first fish",
         [9] = "Sell the fish",
@@ -415,6 +428,41 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             return Use(Tutorial_Text_Value)
         end),
     })
+
+    Scope:Hydrate(OneTimeOffer)({
+        Visible = Scope:Computed(function(Use)
+            return (Use(Fusion_Values.Bought_One_Time_Offer) == false and Use(Fusion_Values.Tutorial_Step) > 10)
+        end),
+    })
+
+    Hydrate_Button(OneTimeOffer, function()
+        if Peek(Fusion_Values.Screen) == "OneTimeOffer" then
+            Fusion_Values.Screen:set("HUD")
+        else
+            Fusion_Values.Screen:set("OneTimeOffer")
+        end
+    end)
+
+    local OneTimeOffer_Gradient = OneTimeOffer:FindFirstChild("UIGradient", true) :: UIGradient
+
+    local StartOffset = Vector2.new(-0.6, 0)
+    local EndOffset = Vector2.new(0.6, 0)
+
+    local function StartScrollLoop()
+        OneTimeOffer_Gradient.Offset = StartOffset
+
+        local TweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
+
+        local Tween = TweenService:Create(OneTimeOffer_Gradient, TweenInfo, { Offset = EndOffset })
+
+        Tween.Completed:Connect(function()
+            StartScrollLoop() -- Restart loop
+        end)
+
+        Tween:Play()
+    end
+
+    StartScrollLoop()
 end
 
 local function Setup_Store(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
@@ -889,6 +937,41 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
     end)
 end
 
+local function Setup_One_Time_Offer(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local LocalPlayer = World:get(LocalEntity, Components.Player)
+
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+
+    local One_Time_Offer_Panel = Panels:WaitForChild("OneTimeOffer")
+    local Buy_Button = One_Time_Offer_Panel:WaitForChild("Buy") :: ImageButton
+    local Price_Text_Label = Buy_Button:WaitForChild("Price") :: TextLabel
+    local Close = One_Time_Offer_Panel:WaitForChild("Close") :: ImageButton
+
+    Scope:Hydrate(One_Time_Offer_Panel)({
+        Visible = Scope:Computed(function(Use)
+            return (Use(Fusion_Values.Screen) == "OneTimeOffer" and Use(Fusion_Values.Bought_One_Time_Offer) == false)
+        end),
+    })
+
+    Scope:Observer(Fusion_Values.Bought_One_Time_Offer):onChange(function()
+        if Peek(Fusion_Values.Bought_One_Time_Offer) == true then
+            Fusion_Values.Screen:set("HUD")
+        end
+    end)
+
+    local Price = Get_Product_Price(ProductIds["One Time Offer"])
+
+    Price_Text_Label.Text = `{Price} R$`
+
+    Hydrate_Button(Buy_Button, function()
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["One Time Offer"])
+    end)
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+end
+
 return {
     name = script.Name,
     phase = Phases.InitPhases.Init,
@@ -905,6 +988,7 @@ return {
             Setup_Index(LocalEntity, PlayerGui)
             Setup_Crate_Shop(LocalEntity, PlayerGui)
             Setup_Upgrade_Shop(LocalEntity, PlayerGui)
+            Setup_One_Time_Offer(LocalEntity, PlayerGui)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then

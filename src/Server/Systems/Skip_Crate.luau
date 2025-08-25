@@ -16,10 +16,6 @@ return {
     phase = Phases.Runservice.Update,
     system = function()
         for _, Player: Player in Network.Requests.SkipCrate.Iter() do
-            if not Skip_Rate_Limit(Player) then
-                continue
-            end
-
             local Player_Entity = Registry.Get("Players", Player)
 
             if not Player_Entity then
@@ -47,7 +43,7 @@ return {
 
             local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
 
-            if Tutorial_Step < 11 then
+            if Tutorial_Step ~= 5 and Tutorial_Step < 11 then
                 Network.Notification.Fire(Player, {
                     Text = "Complete the tutorial first",
                 })
