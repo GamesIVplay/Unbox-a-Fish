@@ -45,7 +45,7 @@ local Hammers: { Hammer } = {
     },
     [5] = {
         Name = "Coral Hammer",
-        Price = 50000,
+        Price = 100000,
         Damage = 10,
         Model = Hammer_Models:WaitForChild("Coral Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.62, -4.05)
@@ -53,7 +53,7 @@ local Hammers: { Hammer } = {
     },
     [6] = {
         Name = "Crab Hammer",
-        Price = 200000,
+        Price = 1000000,
         Damage = 14,
         Model = Hammer_Models:WaitForChild("Crab Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.89, -4.72)
@@ -61,7 +61,7 @@ local Hammers: { Hammer } = {
     },
     [7] = {
         Name = "Spikey Hammer",
-        Price = 800000,
+        Price = 10000000,
         Damage = 18,
         Model = Hammer_Models:WaitForChild("Spikey Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.55, -4.05)
@@ -69,7 +69,7 @@ local Hammers: { Hammer } = {
     },
     [8] = {
         Name = "Anchor Hammer",
-        Price = 3000000,
+        Price = 50000000,
         Damage = 23,
         Model = Hammer_Models:WaitForChild("Anchor Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.69, -4.05)
@@ -77,7 +77,7 @@ local Hammers: { Hammer } = {
     },
     [9] = {
         Name = "Lightning Hammer",
-        Price = 12000000,
+        Price = 100000000,
         Damage = 29,
         Model = Hammer_Models:WaitForChild("Lightning Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.76, -4.05)
@@ -85,7 +85,7 @@ local Hammers: { Hammer } = {
     },
     [10] = {
         Name = "Jelly Hammer",
-        Price = 50000000,
+        Price = 500000000,
         Damage = 35,
         Model = Hammer_Models:WaitForChild("Jelly Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.49, -3.37)
@@ -93,7 +93,7 @@ local Hammers: { Hammer } = {
     },
     [11] = {
         Name = "Abyssal Hammer",
-        Price = 200000000,
+        Price = 2000000000,
         Damage = 42,
         Model = Hammer_Models:WaitForChild("Abyssal Hammer"),
         Viewport_CFrame = CFrame.new(-0.27, -2.23, -4.72)
@@ -101,7 +101,7 @@ local Hammers: { Hammer } = {
     },
     [12] = {
         Name = "Kraken Hammer",
-        Price = 1000000000,
+        Price = 10000000000,
         Damage = 49,
         Model = Hammer_Models:WaitForChild("Kraken Hammer"),
         Viewport_CFrame = CFrame.new(-0.27, -1.89, -6.07)

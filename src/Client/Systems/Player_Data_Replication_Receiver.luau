@@ -1,3 +1,4 @@
+local MarketPlaceService = game:GetService("MarketplaceService")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -6,6 +7,16 @@ local Assets = ReplicatedStorage:WaitForChild("Assets")
 
 local Highlights = Assets:WaitForChild("Highlights")
 local Owned_Highlight = Highlights:WaitForChild("Owned") :: Highlight
+
+local VFX = Assets:WaitForChild("VFX")
+local Arrow_Beam = VFX:WaitForChild("ArrowBeam") :: Beam
+
+local Map = workspace:WaitForChild("Map")
+
+local Interactables = Map:WaitForChild("Interactables")
+local Upgrade_Shop = Interactables:WaitForChild("Upgrade_Shop")
+local Sell_Shop = Interactables:WaitForChild("Sell_Shop")
+local Crate_Shop = Interactables:WaitForChild("Crate_Shop")
 
 local SimpleZone = require(Assets.SimpleZone) :: any
 
@@ -28,6 +39,8 @@ local World = require(ReplicatedStorage.Common.World)
 local Types = require(ReplicatedStorage.Common.Types)
 
 local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
+local Confetti = require(ReplicatedStorage.Common.Modules.Confetti)
+local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
 local BOUNCE_TIME = 0.08
@@ -92,6 +105,7 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
         local Stands = Value:FindFirstChild("Stands")
 
         for _, Stand_Model in Stands:GetChildren() do
+            local Place_Attachment = Stand_Model:FindFirstChild("Place_Attachment", true)
             local Collect_Model = Stand_Model:FindFirstChild("Collect")
             local Touch_Part = Collect_Model:FindFirstChild("Touch") :: Part
 
@@ -102,6 +116,36 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
             local Tween_Down = TweenService:Create(Touch_Part, Bounce_Tween_Info, {
                 Position = Touch_Part.Position - Vector3.new(0, 0.35, 0),
             })
+
+            local PlacePrompt = Instance.new("ProximityPrompt")
+            PlacePrompt.ClickablePrompt = true
+            PlacePrompt.Enabled = false
+            PlacePrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+            PlacePrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+            PlacePrompt.KeyboardKeyCode = Enum.KeyCode.E
+            PlacePrompt.MaxActivationDistance = 10
+            PlacePrompt.RequiresLineOfSight = false
+            PlacePrompt.HoldDuration = 0.5
+            PlacePrompt.ActionText = "Place"
+            PlacePrompt.ObjectText = ""
+            PlacePrompt.Style = Enum.ProximityPromptStyle.Custom
+            PlacePrompt.Parent = Place_Attachment
+
+            local function Update_Prompt()
+                if Stand_Model:GetAttribute("ServerEntity") then
+                    PlacePrompt.Enabled = false
+                else
+                    PlacePrompt.Enabled = true
+                end
+            end
+
+            Stand_Model:GetAttributeChangedSignal("ServerEntity"):Connect(Update_Prompt)
+
+            Update_Prompt()
+
+            PlacePrompt.Triggered:Connect(function()
+                Network.Requests.Place.Fire(Stand_Model)
+            end)
 
             local Collect_Zone = SimpleZone.fromPart(Touch_Part)
 
@@ -118,11 +162,9 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
 
                 local ServerEntity = Stand_Model:GetAttribute("ServerEntity")
 
-                if not ServerEntity then
-                    return
+                if ServerEntity then
+                    Network.Requests.Collect.Fire(ServerEntity)
                 end
-
-                Network.Requests.Collect.Fire(ServerEntity)
 
                 Tween_Down:Play()
 
@@ -151,6 +193,27 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
 
         SkipPrompt.Triggered:Connect(function()
             Network.Requests.SkipCrate.Fire()
+        end)
+
+        local Instant_Break = Value:FindFirstChild("Instant_Break") :: Model
+        local Instant_Break_Screen = Instant_Break:WaitForChild("Screen") :: Part
+
+        local Instant_Break_Prompt = Instance.new("ProximityPrompt")
+        Instant_Break_Prompt.ClickablePrompt = true
+        Instant_Break_Prompt.Enabled = true
+        Instant_Break_Prompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+        Instant_Break_Prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+        Instant_Break_Prompt.KeyboardKeyCode = Enum.KeyCode.E
+        Instant_Break_Prompt.MaxActivationDistance = 10
+        Instant_Break_Prompt.RequiresLineOfSight = false
+        Instant_Break_Prompt.HoldDuration = 0.5
+        Instant_Break_Prompt.ActionText = "Break 🔨"
+        Instant_Break_Prompt.ObjectText = ""
+        Instant_Break_Prompt.Style = Enum.ProximityPromptStyle.Custom
+        Instant_Break_Prompt.Parent = Instant_Break_Screen
+
+        Instant_Break_Prompt.Triggered:Connect(function()
+            MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["Break Crate"])
         end)
 
         local PlotEntity = World:entity()
@@ -225,6 +288,174 @@ local function Handle_Owned_Highlight()
     end
 end
 
+local function Handle_Add_Pickup_Prompts()
+    for _, Value in Network.AddPickupPrompt.Iter() do
+        local Torso = Value:FindFirstChild("Torso")
+
+        local PickupPrompt = Instance.new("ProximityPrompt")
+        PickupPrompt.ClickablePrompt = true
+        PickupPrompt.Enabled = true
+        PickupPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+        PickupPrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+        PickupPrompt.KeyboardKeyCode = Enum.KeyCode.E
+        PickupPrompt.MaxActivationDistance = 5
+        PickupPrompt.RequiresLineOfSight = false
+        PickupPrompt.HoldDuration = 0.5
+        PickupPrompt.ActionText = "Pickup"
+        PickupPrompt.ObjectText = ""
+        PickupPrompt.Style = Enum.ProximityPromptStyle.Custom
+        PickupPrompt.Parent = Torso
+
+        PickupPrompt.Triggered:Connect(function()
+            local ServerEntity = Value:GetAttribute("ServerEntity")
+
+            if not ServerEntity then
+                return
+            end
+
+            Network.Requests.Pickup.Fire(ServerEntity)
+        end)
+    end
+end
+
+local function Handle_Tutorial_Attachment(LocalEntity: Types.Entity)
+    local Character = World:get(LocalEntity, Components.Renderable)
+
+    if not Character then
+        return
+    end
+
+    local RootPart = Character:FindFirstChild("HumanoidRootPart")
+    if not RootPart then
+        return
+    end
+
+    local Tutorial_Step = World:get(LocalEntity, Components.Tutorial_Step) :: number
+    local Character_Tutorial_Attachment = RootPart:FindFirstChild("Character_Tutorial_Attachment")
+
+    if not Character_Tutorial_Attachment and Tutorial_Step < 10 then
+        Character_Tutorial_Attachment = Instance.new("Attachment")
+        Character_Tutorial_Attachment.Name = "Character_Tutorial_Attachment"
+        Character_Tutorial_Attachment.Parent = RootPart
+    elseif Character_Tutorial_Attachment and Tutorial_Step >= 10 then
+        Character_Tutorial_Attachment:Destroy()
+        return
+    end
+
+    local Character_Tutorial_Beam = RootPart:FindFirstChild("Character_Tutorial_Beam")
+
+    if not Character_Tutorial_Beam and Tutorial_Step < 10 then
+        Character_Tutorial_Beam = Arrow_Beam:Clone()
+        Character_Tutorial_Beam.Attachment0 = Character_Tutorial_Attachment
+        Character_Tutorial_Beam.Name = "Character_Tutorial_Beam"
+        Character_Tutorial_Beam.Parent = RootPart
+    elseif Character_Tutorial_Beam and Tutorial_Step >= 10 then
+        Character_Tutorial_Beam:Destroy()
+        return
+    end
+
+    if Tutorial_Step >= 10 then
+        return
+    end
+
+    local Plot_Entity = World:target(LocalEntity, Components.Relationships.Plot)
+
+    if not Plot_Entity then
+        return
+    end
+
+    local Plot_Model = World:get(Plot_Entity, Components.Renderable)
+    local Stands = Plot_Model:FindFirstChild("Stands")
+
+    if Tutorial_Step < 2 then
+        local Plot_Tutorial_Attachment = Plot_Model:FindFirstChild("Tutorial_Attachment", true)
+
+        Character_Tutorial_Beam.Attachment1 = Plot_Tutorial_Attachment
+    elseif Tutorial_Step == 2 then
+        for Stand_Number = 1, 12 do
+            local Stand = Stands:FindFirstChild(Stand_Number) :: Model
+
+            if not Stand:HasTag("Occupied") then
+                continue
+            end
+
+            local Touch = Stand:FindFirstChild("Touch", true) :: Part
+
+            local Collect_Attachment = Touch:FindFirstChildOfClass("Attachment")
+
+            if not Collect_Attachment then
+                Collect_Attachment = Instance.new("Attachment")
+                Collect_Attachment.Parent = Touch
+            end
+
+            Character_Tutorial_Beam.Attachment1 = Collect_Attachment
+            break
+        end
+    elseif Tutorial_Step == 3 then
+        local Upgrade_Shop_Tutorial_Attachment = Upgrade_Shop:FindFirstChild("Tutorial_Attachment", true)
+
+        Character_Tutorial_Beam.Attachment1 = Upgrade_Shop_Tutorial_Attachment
+    elseif Tutorial_Step == 4 then
+        local Crate_Shop_Tutorial_Attachment = Crate_Shop:FindFirstChild("Tutorial_Attachment", true)
+
+        Character_Tutorial_Beam.Attachment1 = Crate_Shop_Tutorial_Attachment
+    elseif Tutorial_Step == 5 then
+        local Skip = Plot_Model:FindFirstChild("Skip")
+        local Skip_Screen = Skip:FindFirstChild("Screen") :: Part
+
+        local Skip_Attachment = Skip_Screen:FindFirstChildOfClass("Attachment")
+
+        if not Skip_Attachment then
+            Skip_Attachment = Instance.new("Attachment")
+            Skip_Attachment.Parent = Skip_Screen
+        end
+
+        Character_Tutorial_Beam.Attachment1 = Skip_Attachment
+    elseif Tutorial_Step == 6 then
+        local Plot_Tutorial_Attachment = Plot_Model:FindFirstChild("Tutorial_Attachment", true)
+
+        Character_Tutorial_Beam.Attachment1 = Plot_Tutorial_Attachment
+    elseif Tutorial_Step == 8 then
+        if Character_Tutorial_Beam.Attachment1 and Character_Tutorial_Beam.Attachment1:IsDescendantOf(Stands) then
+            return
+        end
+
+        for Stand_Number = 1, 12 do
+            local Stand = Stands:FindFirstChild(Stand_Number) :: Model
+
+            if not Stand:HasTag("Occupied") then
+                continue
+            end
+
+            local Floor = Stand:FindFirstChild("Floor", true) :: Part
+
+            local Floor_Attachment = Floor:FindFirstChildOfClass("Attachment")
+
+            if not Floor_Attachment then
+                Floor_Attachment = Instance.new("Attachment")
+                Floor_Attachment.Parent = Floor
+            end
+
+            Character_Tutorial_Beam.Attachment1 = Floor_Attachment
+            break
+        end
+    elseif Tutorial_Step == 9 then
+        local Sell_Shop_Tutorial_Attachment = Sell_Shop:FindFirstChild("Tutorial_Attachment", true)
+
+        Character_Tutorial_Beam.Attachment1 = Sell_Shop_Tutorial_Attachment
+    end
+end
+
+local function Handle_Confetti(LocalEntity: Types.Entity)
+    local LocalPlayer = World:get(LocalEntity, Components.Player) :: Player
+
+    for _, _ in Network.Confetti.Iter() do
+        local HUD = LocalPlayer.PlayerGui:FindFirstChild("HUD") :: ScreenGui
+
+        Confetti({ GUI = HUD, Count = 200 } :: any)
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -254,6 +485,12 @@ return {
         Handle_New_Fish()
 
         Handle_Owned_Highlight()
+
+        Handle_Add_Pickup_Prompts()
+
+        Handle_Tutorial_Attachment(LocalEntity)
+
+        Handle_Confetti(LocalEntity)
     end,
     runConditions = {},
 }

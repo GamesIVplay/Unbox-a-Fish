@@ -83,6 +83,7 @@ return {
                 Spawn_Sound:Destroy()
 
                 Network.NewFish.FireAll(Fish_Model)
+                Network.AddPickupPrompt.Fire(Player, Fish_Model)
                 Network.AddOwnedHighlight.Fire(Player, Fish_Model)
 
                 local Fish_Entity = World:entity()

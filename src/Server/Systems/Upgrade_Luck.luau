@@ -77,6 +77,15 @@ return {
                 continue
             end
 
+            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+
+            if Tutorial_Step < 11 then
+                Network.Notification.Fire(Player, {
+                    Text = "Complete the tutorial first",
+                })
+                continue
+            end
+
             World:set(Player_Entity, Components.Luck_Level, Luck_Level + 1)
             World:set(Player_Entity, Components.Cash, Cash - Next_Luck_Price)
 

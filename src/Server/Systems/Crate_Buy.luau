@@ -73,6 +73,24 @@ return {
                 continue
             end
 
+            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+
+            if Tutorial_Step == 4 then
+                if Crate_Name ~= "Mossy Crate" then
+                    Network.Notification.Fire(Player, {
+                        Text = "Complete the tutorial first",
+                    })
+                    continue
+                end
+
+                World:set(Player_Entity, Components.Tutorial_Step, 5)
+            elseif Tutorial_Step < 11 then
+                Network.Notification.Fire(Player, {
+                    Text = "Complete the tutorial first",
+                })
+                continue
+            end
+
             Stock[Crate_Name] = math.max(Stock[Crate_Name] - 1, 0)
 
             local Crate_Queue = World:get(Player_Entity, Components.Crate_Queue)

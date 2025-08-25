@@ -6,6 +6,9 @@ local Debris_Folder = workspace:WaitForChild("Debris")
 
 local Assets = ReplicatedStorage:WaitForChild("Assets")
 
+local Highlights = Assets:WaitForChild("Highlights")
+local Owned_Highlight = Highlights:WaitForChild("Owned") :: Highlight
+
 local UIGradients = Assets:WaitForChild("UIGradients")
 
 local VFX = Assets:WaitForChild("VFX") :: Folder
@@ -206,6 +209,10 @@ return {
                     Util.Tween_Model_Scale(END_SCALE, 0.5, FISH_Bounce_Tween_Info, Model)
 
                     task.wait(FISH_BOUNCE_TIME)
+
+                    if Owner == LocalPlayer.UserId then
+                        Owned_Highlight:Clone().Parent = Model
+                    end
 
                     Model.Parent = Debris_Folder
 

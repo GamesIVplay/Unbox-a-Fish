@@ -8,6 +8,7 @@ local Start = require(ReplicatedStorage.Common.Start)
 local Systems = script.Parent.Systems
 
 Start({
+    require(Systems.Purchase_Handler),
     require(Systems.Plot_Setup),
     require(Systems.Player_Session),
     require(Systems.Plot_Assign),
@@ -20,9 +21,12 @@ Start({
     require(Systems.Skip_Crate),
     require(Systems.Swing),
     require(Systems.Crate_Display),
+    require(Systems.Place),
     require(Systems.Crate_Open),
     require(Systems.Cash_Generator),
     require(Systems.Collect),
+    require(Systems.Pickup),
+    require(Systems.Sell),
     require(Systems.Fish_Cleanup),
     require(Systems.Leaderstats),
     require(Systems.Player_Data_Replication),

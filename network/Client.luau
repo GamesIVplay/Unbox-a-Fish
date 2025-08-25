@@ -155,15 +155,18 @@ Queue.Reliable[2] = CreateQueue()
 Queue.Reliable[3] = CreateQueue()
 Queue.Reliable[4] = CreateQueue()
 Queue.Reliable[5] = CreateQueue()
-Queue.Reliable[12] = CreateQueue()
-Queue.Reliable[13] = CreateQueue()
-Queue.Reliable[14] = CreateQueue()
-Queue.Reliable[15] = CreateQueue()
-Queue.Reliable[16] = CreateQueue()
-Queue.Reliable[17] = CreateQueue()
-Queue.Reliable[18] = CreateQueue()
+Queue.Reliable[6] = CreateQueue()
+Queue.Reliable[7] = CreateQueue()
+Queue.Reliable[8] = CreateQueue()
 Queue.Reliable[19] = CreateQueue()
 Queue.Reliable[20] = CreateQueue()
+Queue.Reliable[21] = CreateQueue()
+Queue.Reliable[22] = CreateQueue()
+Queue.Reliable[23] = CreateQueue()
+Queue.Reliable[24] = CreateQueue()
+Queue.Reliable[25] = CreateQueue()
+Queue.Reliable[26] = CreateQueue()
+Queue.Reliable[27] = CreateQueue()
 export type Types_Entity = number
 export type Types_Cash = number
 export type Types_ToolLevel = number
@@ -205,6 +208,10 @@ local function ReadEVENT_BounceCrate(): (Model)
 	if typeof(Value) ~= "Instance" then error(`Expected an Instance, got {typeof(Value)} instead.`) end
 	if not Value:IsA("Model") then error(`Expected an Instance of type "Model", got "{Value.ClassName}" instead.`) end
 	return Value
+end
+
+local function ReadEVENT_Confetti(): (nil)
+	return nil
 end
 
 local function ReadEVENT_NewFish(): (Model)
@@ -263,22 +270,38 @@ local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: 
 	return Value
 end
 
+local function ReadEVENT_AddPickupPrompt(): (Model)
+	RecieveInstanceCursor += 1
+	local Value = RecieveInstances[RecieveInstanceCursor]
+	if typeof(Value) ~= "Instance" then error(`Expected an Instance, got {typeof(Value)} instead.`) end
+	if not Value:IsA("Model") then error(`Expected an Instance of type "Model", got "{Value.ClassName}" instead.`) end
+	return Value
+end
+
+local function ReadEVENT_EndDialouge(): (string)
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	local Value = buffer.readstring(RecieveBuffer, Read(Length), Length)
+	return Value
+end
+
 local function Requests_WriteEVENT_UpgradeTool(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 9)
 end
 
 local function Requests_WriteEVENT_UpgradeLuck(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
 end
 
 local function Requests_WriteEVENT_BuyCrate(Value: string): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 11)
 	local Length = #Value
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
 	Allocate(Length)
@@ -288,7 +311,7 @@ end
 local function Requests_WriteEVENT_Swing(Value: number?): ()
 	-- Allocate BLOCK: 2 bytes
 	local BLOCK_START = Allocate(2)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 9)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 12)
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value ~= nil and 1 or 0)
 	if Value ~= nil then
 		-- Allocate BLOCK: 8 bytes
@@ -300,14 +323,40 @@ end
 local function Requests_WriteEVENT_SkipCrate(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 13)
 end
 
 local function Requests_WriteEVENT_Collect(Value: number): ()
 	-- Allocate BLOCK: 9 bytes
 	local BLOCK_START = Allocate(9)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 11)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 14)
 	buffer.writef64(SendBuffer, BLOCK_START + 1, Value)
+end
+
+local function Requests_WriteEVENT_Pickup(Value: number): ()
+	-- Allocate BLOCK: 9 bytes
+	local BLOCK_START = Allocate(9)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 15)
+	buffer.writef64(SendBuffer, BLOCK_START + 1, Value)
+end
+
+local function Requests_WriteEVENT_Place(Value: Model): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 16)
+	table.insert(SendInstances, Value or Null)
+end
+
+local function Requests_WriteEVENT_SellSingle(Value: nil): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 17)
+end
+
+local function Requests_WriteEVENT_SellAll(Value: nil): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 18)
 end
 
 local function PlayerChanges_ReadEVENT_Cash(): (number)
@@ -436,6 +485,10 @@ if not RunService:IsRunning() then
 		Iter = NOOP,
 		Next = NOOP
 	},
+	Confetti = {
+		Iter = NOOP,
+		Next = NOOP
+	},
 	NewFish = {
 		Iter = NOOP,
 		Next = NOOP
@@ -445,6 +498,14 @@ if not RunService:IsRunning() then
 		Next = NOOP
 	},
 	OpenTrapEffect = {
+		Iter = NOOP,
+		Next = NOOP
+	},
+	AddPickupPrompt = {
+		Iter = NOOP,
+		Next = NOOP
+	},
+	EndDialouge = {
 		Iter = NOOP,
 		Next = NOOP
 	},
@@ -465,6 +526,18 @@ if not RunService:IsRunning() then
 			Fire = NOOP
 		},
 		Collect = {
+			Fire = NOOP
+		},
+		Pickup = {
+			Fire = NOOP
+		},
+		Place = {
+			Fire = NOOP
+		},
+		SellSingle = {
+			Fire = NOOP
+		},
+		SellAll = {
 			Fire = NOOP
 		},
 	},
@@ -548,29 +621,35 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 		elseif Index == 2 then
 			Push(Queue.Reliable[2], table.pack(ReadEVENT_BounceCrate()))
 		elseif Index == 3 then
-			Push(Queue.Reliable[3], table.pack(ReadEVENT_NewFish()))
+			Push(Queue.Reliable[3], table.pack(ReadEVENT_Confetti()))
 		elseif Index == 4 then
-			Push(Queue.Reliable[4], table.pack(ReadEVENT_AddOwnedHighlight()))
+			Push(Queue.Reliable[4], table.pack(ReadEVENT_NewFish()))
 		elseif Index == 5 then
-			Push(Queue.Reliable[5], table.pack(ReadEVENT_OpenTrapEffect()))
-		elseif Index == 12 then
-			Push(Queue.Reliable[12], table.pack(PlayerChanges_ReadEVENT_Cash()))
-		elseif Index == 13 then
-			Push(Queue.Reliable[13], table.pack(PlayerChanges_ReadEVENT_ToolLevel()))
-		elseif Index == 14 then
-			Push(Queue.Reliable[14], table.pack(PlayerChanges_ReadEVENT_LuckLevel()))
-		elseif Index == 15 then
-			Push(Queue.Reliable[15], table.pack(PlayerChanges_ReadEVENT_Index()))
-		elseif Index == 16 then
-			Push(Queue.Reliable[16], table.pack(PlayerChanges_ReadEVENT_TutorialStep()))
-		elseif Index == 17 then
-			Push(Queue.Reliable[17], table.pack(PlayerChanges_ReadEVENT_FriendBoost()))
-		elseif Index == 18 then
-			Push(Queue.Reliable[18], table.pack(PlayerChanges_ReadEVENT_PlotChosen()))
+			Push(Queue.Reliable[5], table.pack(ReadEVENT_AddOwnedHighlight()))
+		elseif Index == 6 then
+			Push(Queue.Reliable[6], table.pack(ReadEVENT_OpenTrapEffect()))
+		elseif Index == 7 then
+			Push(Queue.Reliable[7], table.pack(ReadEVENT_AddPickupPrompt()))
+		elseif Index == 8 then
+			Push(Queue.Reliable[8], table.pack(ReadEVENT_EndDialouge()))
 		elseif Index == 19 then
-			Push(Queue.Reliable[19], table.pack(PlayerChanges_ReadEVENT_RestockTime()))
+			Push(Queue.Reliable[19], table.pack(PlayerChanges_ReadEVENT_Cash()))
 		elseif Index == 20 then
-			Push(Queue.Reliable[20], table.pack(PlayerChanges_ReadEVENT_Stock()))
+			Push(Queue.Reliable[20], table.pack(PlayerChanges_ReadEVENT_ToolLevel()))
+		elseif Index == 21 then
+			Push(Queue.Reliable[21], table.pack(PlayerChanges_ReadEVENT_LuckLevel()))
+		elseif Index == 22 then
+			Push(Queue.Reliable[22], table.pack(PlayerChanges_ReadEVENT_Index()))
+		elseif Index == 23 then
+			Push(Queue.Reliable[23], table.pack(PlayerChanges_ReadEVENT_TutorialStep()))
+		elseif Index == 24 then
+			Push(Queue.Reliable[24], table.pack(PlayerChanges_ReadEVENT_FriendBoost()))
+		elseif Index == 25 then
+			Push(Queue.Reliable[25], table.pack(PlayerChanges_ReadEVENT_PlotChosen()))
+		elseif Index == 26 then
+			Push(Queue.Reliable[26], table.pack(PlayerChanges_ReadEVENT_RestockTime()))
+		elseif Index == 27 then
+			Push(Queue.Reliable[27], table.pack(PlayerChanges_ReadEVENT_Stock()))
 		end
 	end
 end)
@@ -652,10 +731,37 @@ local Returns = table.freeze({
 			end
 		end
 	},
+	Confetti = {
+		Iter = function(): () -> (number, nil)
+			local index = 0
+			local queue = Queue.Reliable[3]
+			return function (): (number, nil)
+				index += 1
+				local arguments = Pop(queue)
+				if arguments ~= nil then
+					return index, unpack(arguments, 1, arguments.n)
+				end
+				return 
+			end
+		end,
+		--- @deprecated v0.14.1 -- Use `Iter` instead.
+		Next = function(): () -> (number, nil)
+			local index = 0
+			local queue = Queue.Reliable[3]
+			return function (): (number, nil)
+				index += 1
+				local arguments = Pop(queue)
+				if arguments ~= nil then
+					return index, unpack(arguments, 1, arguments.n)
+				end
+				return 
+			end
+		end
+	},
 	NewFish = {
 		Iter = function(): () -> (number, Model)
 			local index = 0
-			local queue = Queue.Reliable[3]
+			local queue = Queue.Reliable[4]
 			return function (): (number, Model)
 				index += 1
 				local arguments = Pop(queue)
@@ -668,7 +774,7 @@ local Returns = table.freeze({
 		--- @deprecated v0.14.1 -- Use `Iter` instead.
 		Next = function(): () -> (number, Model)
 			local index = 0
-			local queue = Queue.Reliable[3]
+			local queue = Queue.Reliable[4]
 			return function (): (number, Model)
 				index += 1
 				local arguments = Pop(queue)
@@ -682,7 +788,7 @@ local Returns = table.freeze({
 	AddOwnedHighlight = {
 		Iter = function(): () -> (number, Model)
 			local index = 0
-			local queue = Queue.Reliable[4]
+			local queue = Queue.Reliable[5]
 			return function (): (number, Model)
 				index += 1
 				local arguments = Pop(queue)
@@ -695,7 +801,7 @@ local Returns = table.freeze({
 		--- @deprecated v0.14.1 -- Use `Iter` instead.
 		Next = function(): () -> (number, Model)
 			local index = 0
-			local queue = Queue.Reliable[4]
+			local queue = Queue.Reliable[5]
 			return function (): (number, Model)
 				index += 1
 				local arguments = Pop(queue)
@@ -709,7 +815,7 @@ local Returns = table.freeze({
 	OpenTrapEffect = {
 		Iter = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
 			local index = 0
-			local queue = Queue.Reliable[5]
+			local queue = Queue.Reliable[6]
 			return function (): (number, { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
 				index += 1
 				local arguments = Pop(queue)
@@ -722,8 +828,62 @@ local Returns = table.freeze({
 		--- @deprecated v0.14.1 -- Use `Iter` instead.
 		Next = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
 			local index = 0
-			local queue = Queue.Reliable[5]
+			local queue = Queue.Reliable[6]
 			return function (): (number, { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
+				index += 1
+				local arguments = Pop(queue)
+				if arguments ~= nil then
+					return index, unpack(arguments, 1, arguments.n)
+				end
+				return 
+			end
+		end
+	},
+	AddPickupPrompt = {
+		Iter = function(): () -> (number, Model)
+			local index = 0
+			local queue = Queue.Reliable[7]
+			return function (): (number, Model)
+				index += 1
+				local arguments = Pop(queue)
+				if arguments ~= nil then
+					return index, unpack(arguments, 1, arguments.n)
+				end
+				return 
+			end
+		end,
+		--- @deprecated v0.14.1 -- Use `Iter` instead.
+		Next = function(): () -> (number, Model)
+			local index = 0
+			local queue = Queue.Reliable[7]
+			return function (): (number, Model)
+				index += 1
+				local arguments = Pop(queue)
+				if arguments ~= nil then
+					return index, unpack(arguments, 1, arguments.n)
+				end
+				return 
+			end
+		end
+	},
+	EndDialouge = {
+		Iter = function(): () -> (number, string)
+			local index = 0
+			local queue = Queue.Reliable[8]
+			return function (): (number, string)
+				index += 1
+				local arguments = Pop(queue)
+				if arguments ~= nil then
+					return index, unpack(arguments, 1, arguments.n)
+				end
+				return 
+			end
+		end,
+		--- @deprecated v0.14.1 -- Use `Iter` instead.
+		Next = function(): () -> (number, string)
+			local index = 0
+			local queue = Queue.Reliable[8]
+			return function (): (number, string)
 				index += 1
 				local arguments = Pop(queue)
 				if arguments ~= nil then
@@ -764,12 +924,32 @@ local Returns = table.freeze({
 				Requests_WriteEVENT_Collect(Value)
 			end
 		},
+		Pickup = {
+			Fire = function(Value: number): ()
+				Requests_WriteEVENT_Pickup(Value)
+			end
+		},
+		Place = {
+			Fire = function(Value: Model): ()
+				Requests_WriteEVENT_Place(Value)
+			end
+		},
+		SellSingle = {
+			Fire = function(Value: nil): ()
+				Requests_WriteEVENT_SellSingle(Value)
+			end
+		},
+		SellAll = {
+			Fire = function(Value: nil): ()
+				Requests_WriteEVENT_SellAll(Value)
+			end
+		},
 	},
 	PlayerChanges = {
 		Cash = {
 			Iter = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[12]
+				local queue = Queue.Reliable[19]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -782,7 +962,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[12]
+				local queue = Queue.Reliable[19]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -796,7 +976,7 @@ local Returns = table.freeze({
 		ToolLevel = {
 			Iter = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[13]
+				local queue = Queue.Reliable[20]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -809,7 +989,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[13]
+				local queue = Queue.Reliable[20]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -823,7 +1003,7 @@ local Returns = table.freeze({
 		LuckLevel = {
 			Iter = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[14]
+				local queue = Queue.Reliable[21]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -836,7 +1016,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[14]
+				local queue = Queue.Reliable[21]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -850,7 +1030,7 @@ local Returns = table.freeze({
 		Index = {
 			Iter = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
 				local index = 0
-				local queue = Queue.Reliable[15]
+				local queue = Queue.Reliable[22]
 				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
 					index += 1
 					local arguments = Pop(queue)
@@ -863,7 +1043,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
 				local index = 0
-				local queue = Queue.Reliable[15]
+				local queue = Queue.Reliable[22]
 				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
 					index += 1
 					local arguments = Pop(queue)
@@ -877,7 +1057,7 @@ local Returns = table.freeze({
 		TutorialStep = {
 			Iter = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[16]
+				local queue = Queue.Reliable[23]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -890,7 +1070,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[16]
+				local queue = Queue.Reliable[23]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -904,7 +1084,7 @@ local Returns = table.freeze({
 		FriendBoost = {
 			Iter = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[17]
+				local queue = Queue.Reliable[24]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -917,7 +1097,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[17]
+				local queue = Queue.Reliable[24]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -931,7 +1111,7 @@ local Returns = table.freeze({
 		PlotChosen = {
 			Iter = function(): () -> (number, Model)
 				local index = 0
-				local queue = Queue.Reliable[18]
+				local queue = Queue.Reliable[25]
 				return function (): (number, Model)
 					index += 1
 					local arguments = Pop(queue)
@@ -944,7 +1124,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, Model)
 				local index = 0
-				local queue = Queue.Reliable[18]
+				local queue = Queue.Reliable[25]
 				return function (): (number, Model)
 					index += 1
 					local arguments = Pop(queue)
@@ -958,7 +1138,7 @@ local Returns = table.freeze({
 		RestockTime = {
 			Iter = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[19]
+				local queue = Queue.Reliable[26]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -971,7 +1151,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, number)
 				local index = 0
-				local queue = Queue.Reliable[19]
+				local queue = Queue.Reliable[26]
 				return function (): (number, number)
 					index += 1
 					local arguments = Pop(queue)
@@ -985,7 +1165,7 @@ local Returns = table.freeze({
 		Stock = {
 			Iter = function(): () -> (number, {[string]: number})
 				local index = 0
-				local queue = Queue.Reliable[20]
+				local queue = Queue.Reliable[27]
 				return function (): (number, {[string]: number})
 					index += 1
 					local arguments = Pop(queue)
@@ -998,7 +1178,7 @@ local Returns = table.freeze({
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
 			Next = function(): () -> (number, {[string]: number})
 				local index = 0
-				local queue = Queue.Reliable[20]
+				local queue = Queue.Reliable[27]
 				return function (): (number, {[string]: number})
 					index += 1
 					local arguments = Pop(queue)

@@ -12,6 +12,9 @@ type ProfileData = {
     Index: {
         [string]: { string },
     },
+    Inventory: {
+        [string]: { string },
+    },
     Crate_Queue: {
         [number]: string,
     },
@@ -31,9 +34,10 @@ local ProfileStore = require(ReplicatedStorage.Packages.ProfileStore)
 type Profile = ProfileStore.Profile<ProfileData>
 
 local PLAYER_DATA_TEMPLATE: ProfileData = {
-    Cash = 250,
+    Cash = 600,
     Tool_Level = 1,
     Luck_Level = 1,
+    Inventory = {},
     Index = {},
     Crate_Queue = {},
     Fish = {},
@@ -44,7 +48,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Unboxes = 0,
 }
 
-local PlayerProfileStore = ProfileStore.New("Testing101", PLAYER_DATA_TEMPLATE)
+local PlayerProfileStore = ProfileStore.New("Testing10123", PLAYER_DATA_TEMPLATE)
 
 local Profiles: { [Player]: Profile } = {}
 

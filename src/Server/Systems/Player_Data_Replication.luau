@@ -13,9 +13,8 @@ local World = require(ReplicatedStorage.Common.World)
 
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
+local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
 local Types = require(ReplicatedStorage.Common.Types)
-
-local Add_Hammer = require(ReplicatedStorage.Common.Modules.Add_Hammer)
 
 local Player_Entities = World:query(Components.Player):cached()
 
@@ -33,17 +32,126 @@ local function Replicate_Cash(Player: Player, Entity: Types.Entity)
 end
 
 local function Replicate_Tool_Level(Player: Player, Entity: Types.Entity)
+    local Character = World:get(Entity, Components.Renderable)
+
+    if not Character then
+        return
+    end
+
     local Tool_Level = World:get(Entity, Components.Tool_Level)
     local Previous_Tool_Level = World:get(Entity, Pair(Components.Relationships.Previous, Components.Tool_Level))
 
     if Tool_Level ~= Previous_Tool_Level then
-        Add_Hammer(Entity, Player)
+        for _, Inst in Player.Backpack:GetChildren() do
+            if Inst:HasTag("Hammer") then
+                Inst:Destroy()
+            end
+        end
+
+        for _, Inst in Character:GetChildren() do
+            if Inst:HasTag("Hammer") then
+                Inst:Destroy()
+            end
+        end
+
+        local Hammer = Hammers[Tool_Level].Model:Clone()
+        Hammer:AddTag("Hammer")
+        Hammer.Parent = Player.Backpack
 
         Network.PlayerChanges.ToolLevel.Fire(Player, Tool_Level)
 
         World:set(Entity, Pair(Components.Relationships.Previous, Components.Tool_Level), Tool_Level)
 
         Log.Info(`{Player.Name}'s tool level was changed to {Tool_Level}`)
+    end
+end
+
+local function Replicate_Inventory(Player: Player, Entity: Types.Entity)
+    local Character = World:get(Entity, Components.Renderable)
+
+    if not Character then
+        return
+    end
+
+    local Inventory = World:get(Entity, Components.Inventory)
+    local Previous_Inventory = World:get(Entity, Pair(Components.Relationships.Previous, Components.Inventory)) or {}
+
+    if not Util.TablesAreEqual(Inventory, Previous_Inventory) then
+        local Backpack = Player.Backpack
+
+        -- Collect existing tools
+        local Existing: { [string]: { Tool: Tool, Count: number, Container: Instance } } = {}
+
+        local function ScanContainer(Container)
+            for _, Tool in Container:GetChildren() do
+                if Tool:IsA("Tool") and Tool:HasTag("Item") then
+                    local Name = Tool.Name
+                    local StrippedName, Count = Name:match("^(.*)%s%[x(%d+)%]$")
+
+                    if not StrippedName then
+                        StrippedName = Name
+                        Count = 1
+                    else
+                        Count = tonumber(Count)
+                    end
+
+                    -- Prioritize higher counts
+                    local ExistingEntry = Existing[StrippedName]
+                    if not ExistingEntry or Count > ExistingEntry.Count then
+                        Existing[StrippedName] = {
+                            Tool = Tool,
+                            Count = Count,
+                            Container = Container,
+                        }
+                    end
+                end
+            end
+        end
+
+        ScanContainer(Backpack)
+        if Character then
+            ScanContainer(Character)
+        end
+
+        -- Update tools based on Traps data
+        for Mutation, Fish in Inventory do
+            for Name, Target_Amount in Fish do
+                local Formatted_Name = `{Mutation ~= "Normal" and `{Mutation} ` or ""}{Name}`
+                local ExistingEntry = Existing[Formatted_Name]
+
+                if ExistingEntry then
+                    local Tool = ExistingEntry.Tool
+                    local CurrentCount = ExistingEntry.Count
+                    if CurrentCount ~= Target_Amount then
+                        Tool.Name = Target_Amount > 1 and string.format("%s [x%d]", Formatted_Name, Target_Amount)
+                            or Formatted_Name
+                    end
+                    Existing[Formatted_Name] = nil -- Mark as processed
+                else
+                    -- Tool missing, create it
+                    local Tool = Instance.new("Tool")
+                    Tool.RequiresHandle = false
+                    Tool.Name = Target_Amount > 1 and string.format("%s [x%d]", Formatted_Name, Target_Amount)
+                        or Formatted_Name
+                    Tool.Parent = Backpack
+
+                    Tool:AddTag("Item")
+                end
+            end
+        end
+
+        -- Remove any trap tools that no longer exist in the Traps table
+        for TrapName, Entry in Existing do
+            if Entry.Tool:HasTag("Item") then
+                Entry.Tool:Destroy()
+            end
+        end
+
+        World:set(
+            Entity,
+            Pair(Components.Relationships.Previous, Components.Inventory),
+            Util.CopyTable(Inventory, true)
+        )
     end
 end
 
@@ -149,6 +257,8 @@ return {
             Replicate_Cash(Player, Entity)
 
             Replicate_Tool_Level(Player, Entity)
+
+            Replicate_Inventory(Player, Entity)
 
             Replicate_Luck_Level(Player, Entity)
 

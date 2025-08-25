@@ -62,6 +62,8 @@ return {
             local Owner_Entity = World:target(Plot_Entity, Components.Relationships.Owner)
             local Owner_Player = World:get(Owner_Entity, Components.Player) :: Player
 
+            local Tutorial_Step = World:get(Owner_Entity, Components.Tutorial_Step)
+
             local Crate_Queue = World:get(Owner_Entity, Components.Crate_Queue)
             local Luck_Level = World:get(Owner_Entity, Components.Luck_Level)
             local Luck_Multiplier = StatCalculator.Calculate_Luck(Luck_Level)
@@ -69,7 +71,10 @@ return {
             local Crate_Name
             local Crate_Data
 
-            if #Crate_Queue > 0 then
+            if Tutorial_Step ~= 6 and not (Tutorial_Step > 10) then
+                Crate_Name = "Wood Crate"
+                Crate_Data = Crates[Crate_Name]
+            elseif #Crate_Queue > 0 then
                 Crate_Name = Crate_Queue[1]
                 Crate_Data = Crates[Crate_Name]
 

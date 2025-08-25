@@ -12,6 +12,7 @@ local Components: {
     Tool_Level: Types.Id<number>,
     Luck_Level: Types.Id<number>,
     Index: Types.Id<{ any }>,
+    Inventory: Types.Id<{ any }>,
     Crate_Queue: Types.Id<{ [number]: string }>,
     Unboxes: Types.Id<number>,
 
@@ -70,6 +71,7 @@ local Components: {
         Tool_Level = World:component(),
         Luck_Level = World:component(),
         Index = World:component(),
+        Inventory = World:component(),
         Crate_Queue = World:component(),
         Unboxes = World:component(),
 

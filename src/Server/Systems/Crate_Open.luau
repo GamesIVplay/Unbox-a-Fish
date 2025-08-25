@@ -14,6 +14,8 @@ local Sounds = Assets:WaitForChild("Sounds")
 local World_Sounds = Sounds:WaitForChild("World")
 local Crate_Spawn_Sound = World_Sounds:WaitForChild("CrateSpawn") :: Sound
 
+local Fish_Sounds = Sounds:WaitForChild("Fish")
+
 local VFX = Assets:WaitForChild("VFX")
 local CrateBreak = VFX:WaitForChild("CrateBreak") :: Attachment
 
@@ -52,6 +54,14 @@ return {
                 continue
             end
 
+            local Tutorial_Step = World:get(Plot_Owner, Components.Tutorial_Step)
+
+            if Tutorial_Step == 0 then
+                World:set(Plot_Owner, Components.Tutorial_Step, 1)
+            elseif Tutorial_Step == 6 then
+                World:set(Plot_Owner, Components.Tutorial_Step, 7)
+            end
+
             local Plot_Owner_Player = World:get(Plot_Owner, Components.Player) :: Player
 
             Crate_Model.Parent = Temp
@@ -78,6 +88,10 @@ return {
 
             local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name)
 
+            if Tutorial_Step == 0 then
+                Fish_Mutation = "Normal"
+            end
+
             Network.OpenTrapEffect.FireAll({
                 Crate = Crate_Name,
                 CF = Crate_Model:GetPivot(),
@@ -91,6 +105,12 @@ return {
             task.delay(8.5, function()
                 if not World:contains(Crate_Entity) then
                     return
+                end
+
+                if Tutorial_Step == 0 then
+                    World:set(Plot_Owner, Components.Tutorial_Step, 2)
+                elseif Tutorial_Step == 6 then
+                    World:set(Plot_Owner, Components.Tutorial_Step, 8)
                 end
 
                 local Unboxes = World:get(Plot_Owner, Components.Unboxes)
@@ -125,12 +145,26 @@ return {
                     Fish_Model:PivotTo(Stand:GetPivot())
                     local PrimaryPart = Fish_Model.PrimaryPart
 
+                    task.delay(1, function()
+                        local Voice_Sound = Fish_Sounds:FindFirstChild(Fish_Name)
+
+                        if not Voice_Sound then
+                            return
+                        end
+
+                        Voice_Sound = Voice_Sound:Clone()
+                        Voice_Sound.PlayOnRemove = true
+                        Voice_Sound.Parent = PrimaryPart
+                        Voice_Sound:Destroy()
+                    end)
+
                     local Spawn_Sound = Crate_Spawn_Sound:Clone()
                     Spawn_Sound.PlayOnRemove = true
                     Spawn_Sound.Parent = PrimaryPart
                     Spawn_Sound:Destroy()
 
                     Network.NewFish.FireAll(Fish_Model)
+                    Network.AddPickupPrompt.Fire(Plot_Owner_Player, Fish_Model)
                     Network.AddOwnedHighlight.Fire(Plot_Owner_Player, Fish_Model)
 
                     local Fish_Entity = World:entity()
@@ -158,6 +192,25 @@ return {
                         Open_Stand:SetAttribute("ServerEntity", nil)
                     end)
                 else
+                    local Inventory = World:get(Plot_Owner, Components.Inventory)
+
+                    Fish_Mutation = Fish_Mutation or "Normal"
+
+                    if not Inventory[Fish_Mutation] then
+                        Inventory[Fish_Mutation] = {}
+                    end
+
+                    if not Inventory[Fish_Mutation][Fish_Name] then
+                        Inventory[Fish_Mutation][Fish_Name] = 1
+                    else
+                        Inventory[Fish_Mutation][Fish_Name] += 1
+                    end
+
+                    local Mutation_Text = Fish_Mutation ~= "Normal" and (Fish_Mutation .. " ") or ""
+
+                    Network.Notification.Fire(Plot_Owner_Player, {
+                        Text = `{Mutation_Text}{Fish_Name} was added to inventory`,
+                    })
                 end
 
                 World:set(Plot_Owner, Components.Unboxes, Unboxes + 1)

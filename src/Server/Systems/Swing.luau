@@ -82,6 +82,15 @@ return {
                 continue
             end
 
+            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+
+            if Tutorial_Step ~= 0 and Tutorial_Step ~= 6 and not (Tutorial_Step > 10) then
+                Network.Notification.Fire(Player, {
+                    Text = "Complete the tutorial first",
+                })
+                continue
+            end
+
             local Crate_Model = World:get(Crate_Entity, Components.Renderable) :: Model
             local PrimaryPart = Crate_Model.PrimaryPart :: Part
 

@@ -22,8 +22,6 @@ local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
 
-local Add_Hammer = require(ReplicatedStorage.Common.Modules.Add_Hammer)
-
 local PlayersRemoving = Collect(Players.PlayerRemoving)
 
 local function Update_Character_Collision_Groups(Character: Model)
@@ -86,10 +84,16 @@ local function Handle_New_Players()
             World:set(PlayerEntity, Components.Tool_Level, ProfileData.Tool_Level)
             World:set(PlayerEntity, Components.Luck_Level, ProfileData.Luck_Level)
             World:set(PlayerEntity, Components.Index, ProfileData.Index)
+            World:set(PlayerEntity, Components.Inventory, ProfileData.Inventory)
             World:set(PlayerEntity, Components.Crate_Queue, ProfileData.Crate_Queue)
             World:set(PlayerEntity, Components.Stock, ProfileData.Stock)
 
-            World:set(PlayerEntity, Components.Tutorial_Step, ProfileData.Tutorial_Step)
+            World:set(
+                PlayerEntity,
+                Components.Tutorial_Step,
+                ProfileData.Tutorial_Step ~= 4 and ProfileData.Tutorial_Step or 5
+            )
+
             World:set(PlayerEntity, Components.LastPlayed, ProfileData.LastPlayed)
             World:set(PlayerEntity, Components.Unboxes, ProfileData.Unboxes)
             World:set(PlayerEntity, Components.Restock_Time, ProfileData.Restock_Time)
@@ -114,6 +118,7 @@ local function Handle_New_Players()
                 ProfileData.Cash = World:get(PlayerEntity, Components.Cash)
                 ProfileData.Tool_Level = World:get(PlayerEntity, Components.Tool_Level)
                 ProfileData.Luck_Level = World:get(PlayerEntity, Components.Luck_Level)
+                ProfileData.Inventory = World:get(PlayerEntity, Components.Inventory)
                 ProfileData.Index = World:get(PlayerEntity, Components.Index)
                 ProfileData.Crate_Queue = World:get(PlayerEntity, Components.Crate_Queue)
                 ProfileData.Stock = World:get(PlayerEntity, Components.Stock)
@@ -133,7 +138,7 @@ local function Handle_New_Players()
                     ):with(Pair(Components.Relationships.Owner, PlayerEntity))
 
                 do
-                    Fish[tonumber(Stand.Name)] = {
+                    Fish[Stand.Name] = {
                         Name = Fish_Name,
                         Mutation = World:get(Fish_Entity, Components.Mutation),
                         Cash = Cash,
@@ -172,7 +177,8 @@ local function Handle_New_Players()
 
                 Character.Parent = Characters
 
-                Add_Hammer(PlayerEntity, Player)
+                World:remove(PlayerEntity, Pair(Components.Relationships.Previous, Components.Tool_Level))
+                World:remove(PlayerEntity, Pair(Components.Relationships.Previous, Components.Inventory))
             end)
 
             Player.CharacterRemoving:Connect(function()

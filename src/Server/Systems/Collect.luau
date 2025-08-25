@@ -69,6 +69,12 @@ return {
                 continue
             end
 
+            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+
+            if Tutorial_Step == 2 then
+                World:set(Player_Entity, Components.Tutorial_Step, 3)
+            end
+
             local Player_Cash = World:get(Player_Entity, Components.Cash)
 
             local Cash = World:get(ServerEntity, Components.Cash)

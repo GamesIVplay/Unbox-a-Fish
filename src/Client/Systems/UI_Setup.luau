@@ -4,6 +4,8 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+local Debris_Folder = workspace:WaitForChild("Debris")
+
 local ActivateHaptic = Instance.new("HapticEffect")
 ActivateHaptic.Position = Vector3.new(0, 0, 0)
 ActivateHaptic.Radius = 1
@@ -63,6 +65,9 @@ local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
 
 local Abbreviate_Number = require(ReplicatedStorage.Common.Modules.Abbreviate_Number)
+local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
+local Fish = require(ReplicatedStorage.Common.Modules.Fish)
+local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 local StatCalculator = require(ReplicatedStorage.Common.Modules.StatCalculator)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
@@ -210,6 +215,11 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     local Store = Left:WaitForChild("Store") :: ImageButton
     local Index = Left:WaitForChild("Index")
 
+    local Tutorial = HUD:WaitForChild("Tutorial") :: Frame
+    local Tutorial_Text_Label = Tutorial:WaitForChild("TextLabel") :: TextLabel
+
+    local Tutorial_Arrow = HUD:WaitForChild("Tutorial_Arrow") :: ImageLabel
+
     Hydrate_Button(House, function()
         local PlotEntity = World:target(LocalEntity, Components.Relationships.Plot)
 
@@ -317,6 +327,94 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             Fusion_Values.Screen:set("Index")
         end
     end)
+
+    local Tutorial_Text_Value = Scope:Value("")
+
+    local Tutorial_Text_Options = {
+        [0] = "Break the wood crate",
+        [1] = "Wait for a new fish",
+        [2] = "Collect your cash",
+        [3] = "Upgrade your hammer",
+        [4] = "Buy a mossy crate",
+        [5] = "Skip the crate",
+        [6] = "Break the mossy crate",
+        [7] = "Wait for a fish",
+        [8] = "Pickup your first fish",
+        [9] = "Sell the fish",
+        [10] = "Tutorial Complete!",
+    }
+
+    local Type_Writer_Task: thread?
+
+    Scope:Observer(Fusion_Values.Tutorial_Step):onBind(function()
+        local New_Step = Peek(Fusion_Values.Tutorial_Step)
+
+        if Type_Writer_Task then
+            task.cancel(Type_Writer_Task)
+        end
+
+        local Text = Tutorial_Text_Options[New_Step]
+
+        if not Text then
+            Tutorial.Visible = false
+            return
+        end
+
+        Tutorial.Visible = true
+
+        if New_Step == 4 or New_Step == 5 or New_Step == #Tutorial_Text_Options then
+            Fusion_Values.Screen:set("HUD")
+        end
+
+        if New_Step == #Tutorial_Text_Options then
+            Confetti({ GUI = HUD, Count = 200 } :: any)
+
+            TutorialComplete:Play()
+        end
+
+        Type_Writer_Task = task.spawn(function()
+            for i = 1, #Text do
+                Tutorial_Text_Value:set(string.sub(Text, 1, i))
+
+                TypeWriter:Play()
+
+                task.wait(0.05)
+            end
+        end)
+    end)
+
+    local START_TUTORIAL_ARROW_POSITION = UDim2.fromScale(0.247, 0.067)
+    local END_TUTORIAL_ARROW_POSITION = UDim2.fromScale(0.256, 0.067)
+
+    local Tutorial_Arrow_Tween_Info = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+
+    local Tutorial_Arrow_Position = Scope:Value(START_TUTORIAL_ARROW_POSITION)
+    local Tutorial_Arrow_Position_Tween = Scope:Tween(Tutorial_Arrow_Position, Tutorial_Arrow_Tween_Info)
+
+    Scope:Hydrate(Tutorial_Arrow)({
+        Position = Tutorial_Arrow_Position_Tween,
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Tutorial_Step) == 3 and Use(Fusion_Values.Screen) ~= "Upgrades"
+        end),
+    })
+
+    Clock(0.5, function()
+        if Peek(Fusion_Values.Tutorial_Step) > 3 then
+            return
+        end
+
+        if Peek(Tutorial_Arrow_Position) == START_TUTORIAL_ARROW_POSITION then
+            Tutorial_Arrow_Position:set(END_TUTORIAL_ARROW_POSITION)
+        else
+            Tutorial_Arrow_Position:set(START_TUTORIAL_ARROW_POSITION)
+        end
+    end)
+
+    Scope:Hydrate(Tutorial_Text_Label)({
+        Text = Scope:Computed(function(Use)
+            return Use(Tutorial_Text_Value)
+        end),
+    })
 end
 
 local function Setup_Store(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
@@ -340,6 +438,92 @@ local function Setup_Index(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
 
     local Index_Panel = Panels:WaitForChild("Index")
+    local Scroll = Index_Panel:WaitForChild("Scroll") :: ScrollingFrame
+    local Template = Scroll:WaitForChild("Template") :: ImageLabel
+
+    for Fish_Name, Fish_Data in Fish do
+        local ImageLabel = Template:Clone()
+        local Title = ImageLabel:WaitForChild("Title") :: TextLabel
+        local Rarity = ImageLabel:WaitForChild("Rarity") :: TextLabel
+        local Viewport = ImageLabel:WaitForChild("Viewport") :: ViewportFrame
+
+        local Owns = Scope:Computed(function(Use)
+            local Index = Use(Fusion_Values.Index)
+
+            local List = Index["Normal"]
+
+            if not List then
+                return false
+            end
+
+            if not table.find(List, Fish_Name) then
+                return false
+            end
+
+            return true
+        end)
+
+        Title.Text = Fish_Name
+        Rarity.Text = Fish_Data.Rarity
+
+        Scope:Hydrate(Title)({
+            Visible = Scope:Computed(function(Use)
+                return Use(Owns)
+            end),
+        })
+
+        Scope:Hydrate(Rarity)({
+            Visible = Scope:Computed(function(Use)
+                return Use(Owns)
+            end),
+        })
+
+        local Rarity_Gradient = UIGradients:FindFirstChild(Fish_Data.Rarity)
+
+        if Rarity_Gradient then
+            Rarity_Gradient:Clone().Parent = Rarity
+        end
+
+        Scope:Hydrate(Viewport)({
+            ImageColor3 = Scope:Computed(function(Use)
+                if Use(Owns) then
+                    return Color3.new(1, 1, 1)
+                else
+                    return Color3.new(0, 0, 0)
+                end
+            end),
+        })
+
+        local Camera = Instance.new("Camera")
+        Camera.CFrame = CFrame.new(Vector3.zero)
+        Camera.FieldOfView = 70
+        Camera.Parent = Viewport
+
+        Viewport.CurrentCamera = Camera
+
+        local WorldModel = Instance.new("WorldModel")
+        WorldModel.Parent = Viewport
+
+        local Model = Fish_Data.Models.Normal:Clone()
+        Model.Parent = Debris_Folder
+        Model:PivotTo(Fish_Data.Viewport_CFrame)
+
+        local Animator = Model:FindFirstChild("Animator", true) :: Animator
+
+        AnimPlayer.Load(Animator)
+
+        AnimPlayer.PlayAnimation(Animator, {
+            Name = "Fish [Idle]",
+            Loop = true,
+        })
+
+        Model.Parent = WorldModel
+
+        ImageLabel.LayoutOrder = Fish_Data.IncomePerSec
+        ImageLabel.Parent = Scroll
+        ImageLabel.Visible = true
+    end
+
     local Close = Index_Panel:WaitForChild("Close") :: ImageButton
 
     Scope:Hydrate(Index_Panel)({
@@ -369,6 +553,8 @@ local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGu
     local Tool_Boost = Tool_Info:WaitForChild("Boost") :: TextLabel
     local Tool_Icon = Tool:WaitForChild("Icon") :: ImageLabel
     local Tool_Viewport = Tool_Icon:WaitForChild("Viewport") :: ViewportFrame
+
+    local Tutorial_Arrow = Tool:WaitForChild("Tutorial_Arrow")
 
     local Luck = Scroll:WaitForChild("Luck") :: ImageLabel
     local Luck_Buy_Button = Luck:WaitForChild("Buy") :: ImageButton
@@ -422,6 +608,7 @@ local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGu
 
             local Camera = Instance.new("Camera")
             Camera.CFrame = CFrame.new(Vector3.zero)
+            Camera.FieldOfView = 70
             Camera.Parent = Tool_Viewport
 
             table.insert(Processor, Camera)
@@ -496,9 +683,38 @@ local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGu
     ProximityPrompt.Triggered:Connect(function(TargetPlayer)
         Fusion_Values.Screen:set("Upgrades")
     end)
+
+    local START_TUTORIAL_ARROW_POSITION = UDim2.fromScale(0.81, 1.294)
+    local END_TUTORIAL_ARROW_POSITION = UDim2.fromScale(0.81, 1.181)
+
+    local Tutorial_Arrow_Tween_Info = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+
+    local Tutorial_Arrow_Position = Scope:Value(START_TUTORIAL_ARROW_POSITION)
+    local Tutorial_Arrow_Position_Tween = Scope:Tween(Tutorial_Arrow_Position, Tutorial_Arrow_Tween_Info)
+
+    Scope:Hydrate(Tutorial_Arrow)({
+        Position = Tutorial_Arrow_Position_Tween,
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Tutorial_Step) == 3
+        end),
+    })
+
+    Clock(0.5, function()
+        if Peek(Fusion_Values.Tutorial_Step) > 3 then
+            return
+        end
+
+        if Peek(Tutorial_Arrow_Position) == START_TUTORIAL_ARROW_POSITION then
+            Tutorial_Arrow_Position:set(END_TUTORIAL_ARROW_POSITION)
+        else
+            Tutorial_Arrow_Position:set(START_TUTORIAL_ARROW_POSITION)
+        end
+    end)
 end
 
 local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
+    local LocalPlayer = World:get(LocalEntity, Components.Player)
+
     local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
 
     local Crates_Panel = Panels:WaitForChild("Crates")
@@ -590,10 +806,6 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
         Price.Text = `${Util.Format_Number_With_Commas(Crate_Data.Price)}`
 
         Hydrate_Button(Frame, function()
-            if NoStock.Visible then
-                return
-            end
-
             if Peek(Purchase_Frame_Name) == Crate_Name and Peek(Purchase_Frame_Size) == PURCHASE_FRAME_ENABLED_SIZE then
                 Purchase_Frame_Size:set(PURCHASE_FRAME_DISABLED_SIZE)
 
@@ -629,7 +841,9 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
 
     Hydrate_Button(Purchase_Frame_Robux_Buy_Button, function() end)
 
-    Hydrate_Button(Restock, function() end)
+    Hydrate_Button(Restock, function()
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds.Restock)
+    end)
 
     Clock(1, function()
         local Current_Time = os.time()
@@ -675,28 +889,6 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
     end)
 end
 
-local function Setup_Sell_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
-    local RootPart = Sell_Shop_Npc:WaitForChild("HumanoidRootPart")
-
-    local ProximityPrompt = Instance.new("ProximityPrompt")
-    ProximityPrompt.ClickablePrompt = true
-    ProximityPrompt.Enabled = true
-    ProximityPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
-    ProximityPrompt.GamepadKeyCode = Enum.KeyCode.ButtonX
-    ProximityPrompt.KeyboardKeyCode = Enum.KeyCode.E
-    ProximityPrompt.MaxActivationDistance = 15
-    ProximityPrompt.RequiresLineOfSight = false
-    ProximityPrompt.HoldDuration = 0
-    ProximityPrompt.ActionText = "Open Sell"
-    ProximityPrompt.ObjectText = ""
-    ProximityPrompt.Style = Enum.ProximityPromptStyle.Custom
-    ProximityPrompt.Parent = RootPart
-
-    ProximityPrompt.Triggered:Connect(function(TargetPlayer)
-        -- To Be Done
-    end)
-end
-
 return {
     name = script.Name,
     phase = Phases.InitPhases.Init,
@@ -713,7 +905,6 @@ return {
             Setup_Index(LocalEntity, PlayerGui)
             Setup_Crate_Shop(LocalEntity, PlayerGui)
             Setup_Upgrade_Shop(LocalEntity, PlayerGui)
-            Setup_Sell_Shop(LocalEntity, PlayerGui)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then

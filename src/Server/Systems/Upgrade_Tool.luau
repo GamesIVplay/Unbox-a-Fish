@@ -77,6 +77,42 @@ return {
                 continue
             end
 
+            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+
+            if Tutorial_Step == 3 then
+                World:set(Player_Entity, Components.Tutorial_Step, 4)
+
+                --[[ 
+                Character:PivotTo(Spawn.CFrame)
+
+                local VFX = Tutorial_Complete_VFX:Clone()
+                VFX.Parent = RootPart
+
+                for _, Inst: ParticleEmitter in VFX:GetDescendants() do
+                    if Inst:IsA("ParticleEmitter") then
+                        local EmitCount = Inst:GetAttribute("EmitCount") or 1
+
+                        Inst:Emit(EmitCount)
+                    end
+                end
+
+                Debris:AddItem(VFX, 5)
+
+                task.delay(6, function()
+                    if not World:contains(Player_Entity) then
+                        return
+                    end
+
+                    World:set(Player_Entity, Components.Tutorial_Step, 5)
+                end)
+                ]]
+            elseif Tutorial_Step < 11 then
+                Network.Notification.Fire(Player, {
+                    Text = "Complete the tutorial first",
+                })
+                continue
+            end
+
             World:set(Player_Entity, Components.Tool_Level, Tool_Level + 1)
             World:set(Player_Entity, Components.Cash, Cash - Next_Tool_Data.Price)
 

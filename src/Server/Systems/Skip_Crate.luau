@@ -4,7 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Network = require(ServerScriptService.Network)
 
 local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
-local Skip_Rate_Limit = Ratelimit(1, 0.5)
+local Skip_Rate_Limit = Ratelimit(1, 10)
 
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
@@ -43,6 +43,23 @@ return {
                     Text = "Your crate is opening!",
                 })
                 continue
+            end
+
+            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+
+            if Tutorial_Step < 11 then
+                Network.Notification.Fire(Player, {
+                    Text = "Complete the tutorial first",
+                })
+                continue
+            end
+
+            if not Skip_Rate_Limit(Player_Entity) then
+                continue
+            end
+
+            if Tutorial_Step == 5 then
+                World:set(Player_Entity, Components.Tutorial_Step, 6)
             end
 
             World:delete(Crate)
