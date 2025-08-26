@@ -58,6 +58,10 @@ return {
             local Stock = World:get(Player_Entity, Components.Stock)
 
             if not Stock[Crate_Name] or Stock[Crate_Name] == 0 then
+                Network.Notification.Fire(Player, {
+                    Text = "Crate out of stock",
+                    Color = Colors.Error,
+                })
                 continue
             end
 

@@ -29,6 +29,8 @@ type ProfileData = {
     LastPlayed: number,
     Unboxes: number,
     BoughtOneTimeOffer: boolean,
+    Double_Luck_Time_Remaining: number,
+    Double_Mutation_Time_Remaining: number,
 }
 
 local ProfileStore = require(ReplicatedStorage.Packages.ProfileStore)
@@ -48,9 +50,11 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     LastPlayed = os.time(),
     Unboxes = 0,
     BoughtOneTimeOffer = false,
+    Double_Luck_Time_Remaining = 0,
+    Double_Mutation_Time_Remaining = 0,
 }
 
-local PlayerProfileStore = ProfileStore.New("Testing10123", PLAYER_DATA_TEMPLATE)
+local PlayerProfileStore = ProfileStore.New("Main", PLAYER_DATA_TEMPLATE)
 
 local Profiles: { [Player]: Profile } = {}
 

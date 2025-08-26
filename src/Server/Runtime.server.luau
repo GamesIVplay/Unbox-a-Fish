@@ -27,6 +27,8 @@ Start({
     require(Systems.Collect),
     require(Systems.Pickup),
     require(Systems.Sell),
+    require(Systems.Rig),
+    require(Systems.Reducer),
     require(Systems.Fish_Cleanup),
     require(Systems.Leaderstats),
     require(Systems.Player_Data_Replication),

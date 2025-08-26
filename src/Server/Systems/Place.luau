@@ -1,3 +1,4 @@
+local MarketPlaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
@@ -17,6 +18,8 @@ local Pair = Jecs.pair
 
 local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
 local Place_Rate_Limit = Ratelimit(1, 0.5)
+
+local GamepassIds = require(ReplicatedStorage.Common.Modules.GamepassIds)
 
 local Network = require(ServerScriptService.Network)
 
@@ -81,7 +84,7 @@ return {
 
             if Stand_Number == 11 or Stand_Number == 12 then
                 if not World:has(Player_Entity, Components.Tags.DoubleSlots) then
-                    -- Prompt
+                    MarketPlaceService:PromptGamePassPurchase(Player, GamepassIds["x2 Slots"])
                     continue
                 end
             end
@@ -164,7 +167,7 @@ return {
             task.delay(1, function()
                 local Voice_Sound = Fish_Sounds:FindFirstChild(Held_Fish_Name)
 
-                if not Voice_Sound then
+                if not Voice_Sound or not PrimaryPart then
                     return
                 end
 

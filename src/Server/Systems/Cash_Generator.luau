@@ -14,6 +14,7 @@ local World = require(ReplicatedStorage.Common.World)
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
 
+local Abbreviate_Number = require(ReplicatedStorage.Common.Modules.Abbreviate_Number)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
@@ -112,7 +113,7 @@ return {
 
             local Title_Text_Label = Overhead:FindFirstChild("Title") :: TextLabel
 
-            Title_Text_Label.Text = `{Fish_Name} (${IncomePerSec}/s)`
+            Title_Text_Label.Text = `{Fish_Name} (${Util.Format_Number_With_Commas(IncomePerSec)}/s)`
 
             World:set(Fish_Entity, Components.Cash, NewCash)
         end

@@ -86,7 +86,13 @@ return {
 
             Debris:AddItem(Part, 3)
 
-            local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name)
+            local Mutation_Multiplier = World:has(Plot_Owner, Components.Tags.DoubleMutations) and 2 or 1
+
+            if World:get(Plot_Owner, Components.Double_Mutation_Time_Remaining) > 0 then
+                Mutation_Multiplier *= 2
+            end
+
+            local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name, Mutation_Multiplier)
 
             if Tutorial_Step == 0 then
                 Fish_Mutation = nil

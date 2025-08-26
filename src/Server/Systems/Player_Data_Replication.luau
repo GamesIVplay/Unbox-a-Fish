@@ -133,6 +133,7 @@ local function Replicate_Inventory(Player: Player, Entity: Types.Entity)
                     Tool.RequiresHandle = false
                     Tool.Name = Target_Amount > 1 and string.format("%s [x%d]", Formatted_Name, Target_Amount)
                         or Formatted_Name
+                    Tool.CanBeDropped = false
                     Tool.Parent = Backpack
 
                     Tool:AddTag("Item")

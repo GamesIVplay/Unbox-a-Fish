@@ -4,7 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Network = require(ServerScriptService.Network)
 
 local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
-local Skip_Rate_Limit = Ratelimit(1, 10)
+local Skip_Rate_Limit = Ratelimit(1, 8)
 
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
@@ -51,6 +51,9 @@ return {
             end
 
             if not Skip_Rate_Limit(Player_Entity) then
+                Network.Notification.Fire(Player, {
+                    Text = "Your on cooldown",
+                })
                 continue
             end
 

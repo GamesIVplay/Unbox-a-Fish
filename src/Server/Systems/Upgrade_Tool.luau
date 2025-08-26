@@ -1,4 +1,5 @@
 local Debris = game:GetService("Debris")
+local MarketPlaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
@@ -74,6 +75,9 @@ return {
                     Text = "You can't afford this tool",
                     Color = Colors.Error,
                 })
+
+                local ProductId = Hammers[Tool_Level + 1].ProductId
+                MarketPlaceService:PromptProductPurchase(Player, ProductId)
                 continue
             end
 
@@ -81,31 +85,6 @@ return {
 
             if Tutorial_Step == 3 then
                 World:set(Player_Entity, Components.Tutorial_Step, 4)
-
-                --[[ 
-                Character:PivotTo(Spawn.CFrame)
-
-                local VFX = Tutorial_Complete_VFX:Clone()
-                VFX.Parent = RootPart
-
-                for _, Inst: ParticleEmitter in VFX:GetDescendants() do
-                    if Inst:IsA("ParticleEmitter") then
-                        local EmitCount = Inst:GetAttribute("EmitCount") or 1
-
-                        Inst:Emit(EmitCount)
-                    end
-                end
-
-                Debris:AddItem(VFX, 5)
-
-                task.delay(6, function()
-                    if not World:contains(Player_Entity) then
-                        return
-                    end
-
-                    World:set(Player_Entity, Components.Tutorial_Step, 5)
-                end)
-                ]]
             elseif Tutorial_Step < 11 then
                 Network.Notification.Fire(Player, {
                     Text = "Complete the tutorial first",

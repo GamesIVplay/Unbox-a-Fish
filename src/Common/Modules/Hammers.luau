@@ -6,7 +6,7 @@ type Hammer = {
     Damage: number,
     Model: Model,
     Viewport_CFrame: CFrame,
-    --  ProductId: string,
+    ProductId: number,
 }
 
 local Hammers: { Hammer } = {
@@ -18,6 +18,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Wood Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.42, -3.37)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 0,
     },
     [2] = {
         Name = "Stone Hammer",
@@ -26,6 +27,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Stone Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.62, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380334672,
     },
     [3] = {
         Name = "Bone Hammer",
@@ -34,6 +36,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Bone Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.62, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380334818,
     },
     [4] = {
         Name = "Barrel Hammer",
@@ -42,6 +45,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Barrel Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.62, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380334941,
     },
     [5] = {
         Name = "Coral Hammer",
@@ -50,6 +54,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Coral Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.62, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380335070,
     },
     [6] = {
         Name = "Crab Hammer",
@@ -58,6 +63,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Crab Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.89, -4.72)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380335225,
     },
     [7] = {
         Name = "Spikey Hammer",
@@ -66,6 +72,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Spikey Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.55, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380335341,
     },
     [8] = {
         Name = "Anchor Hammer",
@@ -74,6 +81,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Anchor Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.69, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380335485,
     },
     [9] = {
         Name = "Lightning Hammer",
@@ -82,6 +90,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Lightning Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.76, -4.05)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380335610,
     },
     [10] = {
         Name = "Jelly Hammer",
@@ -90,6 +99,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Jelly Hammer"),
         Viewport_CFrame = CFrame.new(-0.3, -1.49, -3.37)
             * CFrame.fromEulerAnglesYXZ(math.rad(10), math.rad(90), math.rad(0)),
+        ProductId = 3380335751,
     },
     [11] = {
         Name = "Abyssal Hammer",
@@ -98,6 +108,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Abyssal Hammer"),
         Viewport_CFrame = CFrame.new(-0.27, -2.23, -4.72)
             * CFrame.fromEulerAnglesYXZ(math.rad(-80), math.rad(90), math.rad(2)),
+        ProductId = 3380335861,
     },
     [12] = {
         Name = "Kraken Hammer",
@@ -106,6 +117,7 @@ local Hammers: { Hammer } = {
         Model = Hammer_Models:WaitForChild("Kraken Hammer"),
         Viewport_CFrame = CFrame.new(-0.27, -1.89, -6.07)
             * CFrame.fromEulerAnglesYXZ(math.rad(-80), math.rad(90), math.rad(2)),
+        ProductId = 3380335989,
     },
 }
 

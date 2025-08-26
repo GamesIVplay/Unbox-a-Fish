@@ -418,10 +418,32 @@ local function PlayerChanges_WriteEVENT_TutorialStep(Value: number): ()
 end
 
 local function PlayerChanges_WriteEVENT_FriendBoost(Value: number): ()
-	-- Allocate BLOCK: 2 bytes
-	local BLOCK_START = Allocate(2)
+	-- Allocate BLOCK: 3 bytes
+	local BLOCK_START = Allocate(3)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 24)
-	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value)
+	if Value > 65504 then
+		buffer.writeu16(SendBuffer, BLOCK_START + 1, 0b0_11111_0000000000)
+	elseif Value < -65504 then
+		buffer.writeu16(SendBuffer, BLOCK_START + 1, 0b1_11111_0000000000)
+	elseif Value ~= Value then
+		buffer.writeu16(SendBuffer, BLOCK_START + 1, 0b1_11111_0000000001)
+	elseif Value == 0 then
+		buffer.writeu16(SendBuffer, BLOCK_START + 1, 0)
+	else
+		local float = Value
+		local Abosulte = math.abs(float)
+		local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+		local RoundedValue = (Abosulte // Interval) * Interval
+		local Fraction, Exponent = math.frexp(RoundedValue)
+		Exponent += 14
+		local Mantissa = math.round(if Exponent <= 0
+			then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+			else Fraction * 0x800) % 0x400
+		local Result = Mantissa
+			+ math.max(Exponent, 0) * 0x400
+			+ if float < 0 then 0x8000 else 0
+		buffer.writeu16(SendBuffer, BLOCK_START + 1, Result)
+	end
 end
 
 local function PlayerChanges_WriteEVENT_PlotChosen(Value: Model): ()

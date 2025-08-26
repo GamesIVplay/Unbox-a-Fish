@@ -11,4 +11,4 @@ map Stock = { [string]: f64 }
 
 enum Rarity = {Common, Rare, Epic, Legendary, Mythic, Secret}
 
-type FriendBoost = u8
+type FriendBoost = f16

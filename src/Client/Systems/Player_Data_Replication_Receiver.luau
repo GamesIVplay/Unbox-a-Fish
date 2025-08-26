@@ -13,6 +13,8 @@ local Arrow_Beam = VFX:WaitForChild("ArrowBeam") :: Beam
 
 local Map = workspace:WaitForChild("Map")
 
+local Plots = Map:WaitForChild("Plots")
+
 local Interactables = Map:WaitForChild("Interactables")
 local Upgrade_Shop = Interactables:WaitForChild("Upgrade_Shop")
 local Sell_Shop = Interactables:WaitForChild("Sell_Shop")
@@ -100,6 +102,35 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
     local LocalPlayer = World:get(LocalEntity, Components.Player) :: Player
 
     for _, Value in Network.PlayerChanges.PlotChosen.Iter() do
+        for _, Model: Model in Plots:GetChildren() do
+            local Luck_Boost = Model:WaitForChild("Luck_Boost") :: Model
+            local Mutation_Boost = Model:WaitForChild("Mutation_Boost")
+
+            local Luck_Zone = SimpleZone.fromPart(Luck_Boost.Touch)
+
+            Luck_Zone:BindToHeartbeat()
+
+            Luck_Zone:ListenTo("Player", "Entered", function(TargetPlayer: Player)
+                if TargetPlayer ~= LocalPlayer then
+                    return
+                end
+
+                MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["x2 Luck 10 Min"])
+            end)
+
+            local Mutation_Zone = SimpleZone.fromPart(Mutation_Boost.Touch)
+
+            Mutation_Zone:BindToHeartbeat()
+
+            Mutation_Zone:ListenTo("Player", "Entered", function(TargetPlayer: Player)
+                if TargetPlayer ~= LocalPlayer then
+                    return
+                end
+
+                MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["x2 Mutation 10 Min"])
+            end)
+        end
+
         YourPlot_Billboard:Clone().Parent = Value
 
         local Stands = Value:FindFirstChild("Stands")
@@ -468,6 +499,33 @@ local function Handle_One_Time_Offer_Bought(LocalEntity: Types.Entity)
     end
 end
 
+local function Handle_Tool_Rigged_Animation(LocalEntity: Types.Entity)
+    local Character = World:get(LocalEntity, Components.Renderable) :: Model
+
+    if not Character then
+        return
+    end
+
+    local Animator = Character:FindFirstChild("Animator", true)
+
+    if not Animator then
+        return
+    end
+
+    if not Character:FindFirstChild("Rigged_Fish") then
+        AnimPlayer.StopAnimation(Animator, {
+            Name = "Carry",
+        })
+        return
+    end
+
+    AnimPlayer.PlayAnimation(Animator, {
+        Name = "Carry",
+        Loop = true,
+        Priority = Enum.AnimationPriority.Action,
+    })
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -505,6 +563,8 @@ return {
         Handle_Confetti(LocalEntity)
 
         Handle_One_Time_Offer_Bought(LocalEntity)
+
+        Handle_Tool_Rigged_Animation(LocalEntity)
     end,
     runConditions = {},
 }

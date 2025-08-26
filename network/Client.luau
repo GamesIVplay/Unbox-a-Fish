@@ -433,9 +433,33 @@ local function PlayerChanges_ReadEVENT_TutorialStep(): (number)
 end
 
 local function PlayerChanges_ReadEVENT_FriendBoost(): (number)
-	-- Read BLOCK: 1 bytes
-	local BLOCK_START = Read(1)
-	local Value = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	local Value
+	local MantissaExponent = Encoded % 0x8000
+	if MantissaExponent == 0b0_11111_0000000000  then
+		if Encoded // 0x8000 == 1 then
+			Value = -math.huge
+		else
+			Value = math.huge
+		end
+	elseif MantissaExponent == 0b1_11111_0000000000   then
+		Value = 0 / 0
+	elseif MantissaExponent == 0b0_00000_0000000000   then
+		Value = 0
+	else
+		local Mantissa = MantissaExponent % 0x400
+		local Exponent = MantissaExponent // 0x400
+		local Fraction;
+		if Exponent == 0 then
+			Fraction = Mantissa / 0x400
+		else
+			Fraction = Mantissa / 0x800 + 0.5
+		end
+		local Result = math.ldexp(Fraction, Exponent - 14)
+		Value = if Encoded // 0x8000 == 1 then -Result else Result
+	end
 	return Value
 end
 

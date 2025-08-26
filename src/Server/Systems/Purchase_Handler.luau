@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
---local Handle_Gamepasses = require(ServerScriptService.Server.Modules.Handle_Gamepasses)
+local Handle_Gamepasses = require(ServerScriptService.Server.Modules.Handle_Gamepasses)
 
 local Network = require(ServerScriptService.Network)
 
@@ -34,6 +34,8 @@ local Log = require(ReplicatedStorage.Common.Log)
 local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 
 local Colors = require(ReplicatedStorage.Common.Modules.Colors)
+local Crates = require(ReplicatedStorage.Common.Modules.Crates)
+local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
 
 local Types = require(ReplicatedStorage.Common.Types)
 
@@ -71,19 +73,83 @@ local Grant_Purchase_By_Product_Id = {
             Inventory["Normal"] = {}
         end
 
-        if not Inventory["Normal"]["Bombardiro Crocodilo"] then
-            Inventory["Normal"]["Bombardiro Crocodilo"] = 1
+        if not Inventory["Normal"]["Girafa Celeste"] then
+            Inventory["Normal"]["Girafa Celeste"] = 1
         else
-            Inventory["Normal"]["Bombardiro Crocodilo"] += 1
+            Inventory["Normal"]["Girafa Celeste"] += 1
         end
 
-        if not Inventory["Normal"]["Pipi Kiwi"] then
-            Inventory["Normal"]["Pipi Kiwi"] = 1
+        if not Inventory["Normal"]["Burbaloni Luliloli"] then
+            Inventory["Normal"]["Burbaloni Luliloli"] = 1
         else
-            Inventory["Normal"]["Pipi Kiwi"] += 1
+            Inventory["Normal"]["Burbaloni Luliloli"] += 1
         end
 
         World:add(Player_Entity, Components.Tags.BoughtOneTimeOffer)
+
+        return true
+    end,
+    [ProductIds["Starter Pack"]] = function(_, Player_Entity: Types.Entity)
+        local Current_Tool_Level = World:get(Player_Entity, Components.Tool_Level)
+
+        if Current_Tool_Level < 4 then
+            World:set(Player_Entity, Components.Tool_Level, 4)
+        end
+
+        local Inventory = World:get(Player_Entity, Components.Inventory)
+
+        if not Inventory["Normal"] then
+            Inventory["Normal"] = {}
+        end
+
+        if not Inventory["Normal"]["Chimpanzini Bananini"] then
+            Inventory["Normal"]["Chimpanzini Bananini"] = 1
+        else
+            Inventory["Normal"]["Chimpanzini Bananini"] += 1
+        end
+
+        World:set(Player_Entity, Components.Double_Luck_Time_Remaining, 60 * 10)
+        World:set(Player_Entity, Components.Double_Mutation_Time_Remaining, 60 * 10)
+
+        return true
+    end,
+    [ProductIds["Ultimate Pack"]] = function(_, Player_Entity: Types.Entity)
+        local Current_Tool_Level = World:get(Player_Entity, Components.Tool_Level)
+
+        if Current_Tool_Level < 9 then
+            World:set(Player_Entity, Components.Tool_Level, 9)
+        end
+
+        local Inventory = World:get(Player_Entity, Components.Inventory)
+
+        if not Inventory["Normal"] then
+            Inventory["Normal"] = {}
+        end
+
+        if not Inventory["Normal"]["Rhino toasterino"] then
+            Inventory["Normal"]["Rhino toasterino"] = 1
+        else
+            Inventory["Normal"]["Rhino toasterino"] += 1
+        end
+
+        World:set(Player_Entity, Components.Double_Luck_Time_Remaining, 60 * 15)
+        World:set(Player_Entity, Components.Double_Mutation_Time_Remaining, 60 * 15)
+
+        return true
+    end,
+    [ProductIds["x2 Luck 10 Min"]] = function(_, Player_Entity: Types.Entity)
+        World:set(Player_Entity, Components.Double_Luck_Time_Remaining, 60 * 10)
+
+        return true
+    end,
+    [ProductIds["x2 Mutation 10 Min"]] = function(_, Player_Entity: Types.Entity)
+        World:set(Player_Entity, Components.Double_Mutation_Time_Remaining, 60 * 10)
+
+        return true
+    end,
+
+    [ProductIds["15 Min Server Luck x2"]] = function(_, Player_Entity: Types.Entity)
+        World:set(Components.Server_Double_Luck_End_Time, Components.Server_Double_Luck_End_Time, os.time() + (60 * 15))
 
         return true
     end,
@@ -203,16 +269,42 @@ return {
     name = script.Name,
     phase = Phases.InitPhases.PreInit,
     system = function()
+        for Index, Hammer_Data in Hammers do
+            Grant_Purchase_By_Product_Id[Hammer_Data.ProductId] = function(_, Player_Entity: Types.Entity)
+                World:set(Player_Entity, Components.Tool_Level, Index)
+
+                return true
+            end
+        end
+
+        for Crate_Name, Crate_Data in Crates do
+            Grant_Purchase_By_Product_Id[Crate_Data.ProductId] = function(_, Player_Entity: Types.Entity)
+                local Player = World:get(Player_Entity, Components.Player)
+                local Crate_Queue = World:get(Player_Entity, Components.Crate_Queue)
+
+                table.insert(Crate_Queue, Crate_Name)
+
+                World:set(Player_Entity, Components.Crate_Queue, Crate_Queue)
+
+                Network.Notification.Fire(Player, {
+                    Text = `{Crate_Name} added to queue`,
+                })
+                return true
+            end
+        end
+
         MarketPlaceService.ProcessReceipt = ProcessReceipt
 
         MarketPlaceService.PromptGamePassPurchaseFinished:Connect(function(Player, _, IsPurchased)
-            if not IsPurchased then
-                return
-            end
-
             local PlayerEntity = Registry.Get("Players", Player)
 
             if not PlayerEntity then
+                return
+            end
+
+            Handle_Gamepasses(PlayerEntity)
+
+            if not IsPurchased then
                 return
             end
 
@@ -252,8 +344,6 @@ return {
 
                 Network.Confetti.Fire(Player)
             end
-
-            -- Handle_Gamepasses(PlayerEntity)
         end)
     end,
     runConditions = {},

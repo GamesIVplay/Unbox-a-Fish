@@ -40,6 +40,11 @@ local Components: {
 
     Stand: Types.Id<Model>,
 
+    Double_Luck_Time_Remaining: Types.Id<number>,
+    Double_Mutation_Time_Remaining: Types.Id<number>,
+
+    Server_Double_Luck_End_Time: Types.Id<number>,
+
     Tags: {
         Networked: Types.Entity,
         Plot: Types.Entity,
@@ -50,6 +55,8 @@ local Components: {
         DoubleSlots: Types.Entity,
         DoubleMoney: Types.Entity,
         BoughtOneTimeOffer: Types.Entity,
+        DoubleLuck: Types.Entity,
+        DoubleMutations: Types.Entity,
     },
 
     Relationships: {
@@ -100,6 +107,11 @@ local Components: {
 
         Stand = World:component(),
 
+        Double_Luck_Time_Remaining = World:component(),
+        Double_Mutation_Time_Remaining = World:component(),
+
+        Server_Double_Luck_End_Time = World:component(),
+
         Tags = {
             Networked = World:component(),
             Plot = World:component(),
@@ -110,6 +122,8 @@ local Components: {
             DoubleSlots = World:component(),
             DoubleMoney = World:component(),
             BoughtOneTimeOffer = World:component(),
+            DoubleLuck = World:component(),
+            DoubleMutations = World:component(),
         },
         Relationships = {
             Max = World:component(),
@@ -186,5 +200,7 @@ end
 Setup_Hooks()
 
 Name_Components(Components)
+
+World:set(Components.Server_Double_Luck_End_Time, Components.Server_Double_Luck_End_Time, os.time())
 
 return table.freeze(Components)

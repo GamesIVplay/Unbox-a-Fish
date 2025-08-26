@@ -11,6 +11,8 @@ local Characters = workspace:WaitForChild("Characters") :: Folder
 PhysicsService:RegisterCollisionGroup("Character")
 PhysicsService:CollisionGroupSetCollidable("Character", "Character", false)
 
+local Handle_Gamepasses = require(ServerScriptService.Server.Modules.Handle_Gamepasses)
+
 local Network = require(ServerScriptService.Network)
 
 local Profile = require(ServerScriptService.Server.Modules.Profile)
@@ -87,11 +89,17 @@ local function Handle_New_Players()
             World:set(PlayerEntity, Components.Inventory, ProfileData.Inventory)
             World:set(PlayerEntity, Components.Crate_Queue, ProfileData.Crate_Queue)
             World:set(PlayerEntity, Components.Stock, ProfileData.Stock)
+            World:set(PlayerEntity, Components.Double_Luck_Time_Remaining, ProfileData.Double_Luck_Time_Remaining)
+            World:set(
+                PlayerEntity,
+                Components.Double_Mutation_Time_Remaining,
+                ProfileData.Double_Mutation_Time_Remaining
+            )
 
             World:set(
                 PlayerEntity,
                 Components.Tutorial_Step,
-                ProfileData.Tutorial_Step ~= 4 and ProfileData.Tutorial_Step or 5
+                ProfileData.Tutorial_Step ~= 10 and ProfileData.Tutorial_Step or 11
             )
 
             if ProfileData.BoughtOneTimeOffer then
@@ -131,6 +139,9 @@ local function Handle_New_Players()
                 ProfileData.Restock_Time = World:get(PlayerEntity, Components.Restock_Time)
                 ProfileData.Unboxes = World:get(PlayerEntity, Components.Unboxes)
                 ProfileData.BoughtOneTimeOffer = World:has(PlayerEntity, Components.Tags.BoughtOneTimeOffer)
+                ProfileData.Double_Mutation_Time_Remaining =
+                    World:get(PlayerEntity, Components.Double_Mutation_Time_Remaining)
+                ProfileData.Double_Luck_Time_Remaining = World:get(PlayerEntity, Components.Double_Luck_Time_Remaining)
 
                 local Fish = {}
 
@@ -190,11 +201,13 @@ local function Handle_New_Players()
                 World:remove(PlayerEntity, Components.Renderable)
             end)
 
-            Update_Friend_Boosts()
-
             for _, Fish_Model: Model in World:query(Components.Renderable):with(Components.Tags.Fish) do
                 Network.NewFish.Fire(Player, Fish_Model)
             end
+
+            Update_Friend_Boosts()
+
+            Handle_Gamepasses(PlayerEntity)
 
             Log.Info(`Setup {Player.Name}'s entity`)
         end)

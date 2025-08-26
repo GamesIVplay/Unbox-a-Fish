@@ -68,6 +68,20 @@ return {
             local Luck_Level = World:get(Owner_Entity, Components.Luck_Level)
             local Luck_Multiplier = StatCalculator.Calculate_Luck(Luck_Level)
 
+            if World:has(Owner_Entity, Components.Tags.DoubleLuck) then
+                Luck_Multiplier *= 2
+            end
+
+            if World:get(Owner_Entity, Components.Double_Luck_Time_Remaining) > 0 then
+                Luck_Multiplier *= 2
+            end
+
+            if
+                World:get(Components.Server_Double_Luck_End_Time, Components.Server_Double_Luck_End_Time) > os.time()
+            then
+                Luck_Multiplier *= 2
+            end
+
             local Crate_Name
             local Crate_Data
 

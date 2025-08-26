@@ -66,6 +66,7 @@ local World = require(ReplicatedStorage.Common.World)
 local Abbreviate_Number = require(ReplicatedStorage.Common.Modules.Abbreviate_Number)
 local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
+local GamepassIds = require(ReplicatedStorage.Common.Modules.GamepassIds)
 local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 local StatCalculator = require(ReplicatedStorage.Common.Modules.StatCalculator)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
@@ -423,6 +424,33 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
         end
     end)
 
+    local Second_Tutorial_Arrow = HUD:WaitForChild("Second_Tutorial_Arrow")
+
+    local START_SELL_TUTORIAL_ARROW_POSITION = UDim2.fromScale(0.702, 0.15)
+    local END_SELL_TUTORIAL_ARROW_POSITION = UDim2.fromScale(0.702, 0.13)
+
+    local Second_Tutorial_Arrow_Position = Scope:Value(START_SELL_TUTORIAL_ARROW_POSITION)
+    local Second_Tutorial_Arrow_Position_Tween = Scope:Tween(Second_Tutorial_Arrow_Position, Tutorial_Arrow_Tween_Info)
+
+    Scope:Hydrate(Second_Tutorial_Arrow)({
+        Position = Second_Tutorial_Arrow_Position_Tween,
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Tutorial_Step) == 9 and Use(Fusion_Values.Screen)
+        end),
+    })
+
+    Clock(0.5, function()
+        if Peek(Fusion_Values.Tutorial_Step) > 9 then
+            return
+        end
+
+        if Peek(Second_Tutorial_Arrow_Position) == START_SELL_TUTORIAL_ARROW_POSITION then
+            Second_Tutorial_Arrow_Position:set(END_SELL_TUTORIAL_ARROW_POSITION)
+        else
+            Second_Tutorial_Arrow_Position:set(START_SELL_TUTORIAL_ARROW_POSITION)
+        end
+    end)
+
     Scope:Hydrate(Tutorial_Text_Label)({
         Text = Scope:Computed(function(Use)
             return Use(Tutorial_Text_Value)
@@ -431,7 +459,7 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     Scope:Hydrate(OneTimeOffer)({
         Visible = Scope:Computed(function(Use)
-            return (Use(Fusion_Values.Bought_One_Time_Offer) == false and Use(Fusion_Values.Tutorial_Step) > 10)
+            return (Use(Fusion_Values.Bought_One_Time_Offer) == false and Use(Fusion_Values.Tutorial_Step) > 9)
         end),
     })
 
@@ -466,10 +494,104 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 end
 
 local function Setup_Store(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local LocalPlayer = World:get(LocalEntity, Components.Player)
+
     local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
 
     local Store_Panel = Panels:WaitForChild("Store")
+    local Scroll = Store_Panel:WaitForChild("Scroll") :: ScrollingFrame
     local Close = Store_Panel:WaitForChild("Close") :: ImageButton
+
+    local KrakenCrate = Scroll:WaitForChild("KrakenCrate")
+    local KrakenCrate_Buy_Button = KrakenCrate:WaitForChild("Buy") :: ImageButton
+    local KrakenCrate_Buy_Price_Text_Label = KrakenCrate_Buy_Button:WaitForChild("Price") :: TextLabel
+    local KrakenCrate_Product_Id = Crates["Kraken Crate"].ProductId
+    local KrakenCrate_Cost = Get_Product_Price(KrakenCrate_Product_Id)
+
+    KrakenCrate_Buy_Price_Text_Label.Text = `{KrakenCrate_Cost}`
+
+    Hydrate_Button(KrakenCrate_Buy_Button, function()
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, KrakenCrate_Product_Id)
+    end)
+
+    local Passes = Scroll:WaitForChild("Passes")
+
+    local DoubleCash = Passes:WaitForChild("DoubleCash")
+    local Double_Cash_Buy_Button = DoubleCash:WaitForChild("Buy") :: ImageButton
+    local Double_Cash_Price_Text_Label = Double_Cash_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Double_Cash_Robux_Price = Get_Gamepass_Price(GamepassIds["x2 Cash"])
+
+    Double_Cash_Price_Text_Label.Text = `{Double_Cash_Robux_Price}`
+
+    Hydrate_Button(Double_Cash_Buy_Button, function()
+        MarketPlaceService:PromptGamePassPurchase(LocalPlayer, GamepassIds["x2 Cash"])
+    end)
+
+    local DoubleSlots = Passes:WaitForChild("DoubleSlots")
+    local Double_Slots_Buy_Button = DoubleSlots:WaitForChild("Buy") :: ImageButton
+    local Double_Slots_Price_Text_Label = Double_Slots_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Double_Slots_Robux_Price = Get_Gamepass_Price(GamepassIds["x2 Slots"])
+
+    Double_Slots_Price_Text_Label.Text = `{Double_Slots_Robux_Price}`
+
+    Hydrate_Button(Double_Slots_Buy_Button, function()
+        MarketPlaceService:PromptGamePassPurchase(LocalPlayer, GamepassIds["x2 Slots"])
+    end)
+
+    local DoubleLuck = Passes:WaitForChild("DoubleLuck")
+    local Double_Luck_Buy_Button = DoubleLuck:WaitForChild("Buy") :: ImageButton
+    local Double_Luck_Price_Text_Label = Double_Luck_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Double_Luck_Robux_Price = Get_Gamepass_Price(GamepassIds["x2 Luck"])
+
+    Double_Luck_Price_Text_Label.Text = `{Double_Luck_Robux_Price}`
+
+    Hydrate_Button(Double_Luck_Buy_Button, function()
+        MarketPlaceService:PromptGamePassPurchase(LocalPlayer, GamepassIds["x2 Luck"])
+    end)
+
+    local DoubleMutations = Passes:WaitForChild("DoubleMutations")
+    local Double_Mutations_Buy_Button = DoubleMutations:WaitForChild("Buy") :: ImageButton
+    local Double_Mutations_Price_Text_Label = Double_Mutations_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Double_Mutations_Robux_Price = Get_Gamepass_Price(GamepassIds["x2 Mutations"])
+
+    Double_Mutations_Price_Text_Label.Text = `{Double_Mutations_Robux_Price}`
+
+    Hydrate_Button(Double_Mutations_Buy_Button, function()
+        MarketPlaceService:PromptGamePassPurchase(LocalPlayer, GamepassIds["x2 Mutations"])
+    end)
+
+    local PackBuyButtons = Scroll:WaitForChild("PackBuyButtons")
+
+    local Starter_Buy_Button = PackBuyButtons:WaitForChild("Starter") :: ImageButton
+    local Starter_Buy_Button_Price_Text_Label = Starter_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Starter_Price = Get_Product_Price(ProductIds["Starter Pack"])
+
+    Starter_Buy_Button_Price_Text_Label.Text = `{Starter_Price}`
+
+    Hydrate_Button(Starter_Buy_Button, function()
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["Starter Pack"])
+    end)
+
+    local Ultimate_Buy_Button = PackBuyButtons:WaitForChild("Ultimate") :: ImageButton
+    local Ultimate_Buy_Button_Price_Text_Label = Ultimate_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Ultimate_Price = Get_Product_Price(ProductIds["Ultimate Pack"])
+
+    Ultimate_Buy_Button_Price_Text_Label.Text = `{Ultimate_Price}`
+
+    Hydrate_Button(Ultimate_Buy_Button, function()
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["Ultimate Pack"])
+    end)
+
+    local ServerLuck = Scroll:WaitForChild("ServerLuck")
+    local ServerLuck_Buy_Button = ServerLuck:WaitForChild("Buy") :: ImageButton
+    local ServerLuck_Price_Text_Label = ServerLuck_Buy_Button:WaitForChild("Price") :: TextLabel
+    local ServerLuck_Price = Get_Product_Price(ProductIds["15 Min Server Luck x2"])
+
+    ServerLuck_Price_Text_Label.Text = `{ServerLuck_Price}`
+
+    Hydrate_Button(ServerLuck_Buy_Button, function()
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["15 Min Server Luck x2"])
+    end)
 
     Scope:Hydrate(Store_Panel)({
         Visible = Scope:Computed(function(Use)
@@ -816,6 +938,8 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
         local Stock = Info:WaitForChild("Stock") :: TextLabel
         local Price = Info:WaitForChild("Price") :: TextLabel
 
+        local Robux_Cost = Get_Product_Price(Crate_Data.ProductId)
+
         Scope:Hydrate(NoStock)({
             Visible = Scope:Computed(function(Use)
                 local Current_Stock = Use(Fusion_Values.Stock)
@@ -870,7 +994,38 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
             Purchase_Frame_Name:set(Crate_Name)
 
             Purchase_Frame_Buy_Button_Title.Text = `${Util.Format_Number_With_Commas(Crate_Data.Price)}`
+            Purchase_Frame_Robux_Buy_Button_Title.Text = `{Robux_Cost}`
         end, 1.02, 1.05)
+
+        if Crate_Name == "Mossy Crate" then
+            local Tutorial_Arrow = Frame:WaitForChild("Tutorial_Arrow")
+            local START_TUTORIAL_ARROW_POSITION = UDim2.fromScale(1.045, 0.541)
+            local END_TUTORIAL_ARROW_POSITION = UDim2.fromScale(1.03, 0.541)
+
+            local Tutorial_Arrow_Tween_Info = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+
+            local Tutorial_Arrow_Position = Scope:Value(START_TUTORIAL_ARROW_POSITION)
+            local Tutorial_Arrow_Position_Tween = Scope:Tween(Tutorial_Arrow_Position, Tutorial_Arrow_Tween_Info)
+
+            Scope:Hydrate(Tutorial_Arrow)({
+                Position = Tutorial_Arrow_Position_Tween,
+                Visible = Scope:Computed(function(Use)
+                    return Use(Fusion_Values.Tutorial_Step) == 4
+                end),
+            })
+
+            Clock(0.5, function()
+                if Peek(Fusion_Values.Tutorial_Step) > 4 then
+                    return
+                end
+
+                if Peek(Tutorial_Arrow_Position) == START_TUTORIAL_ARROW_POSITION then
+                    Tutorial_Arrow_Position:set(END_TUTORIAL_ARROW_POSITION)
+                else
+                    Tutorial_Arrow_Position:set(START_TUTORIAL_ARROW_POSITION)
+                end
+            end)
+        end
 
         Frame.Parent = Scroll
         Frame.LayoutOrder = Crate_Data.Price
@@ -887,7 +1042,23 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
         Network.Requests.BuyCrate.Fire(Crate_Name)
     end)
 
-    Hydrate_Button(Purchase_Frame_Robux_Buy_Button, function() end)
+    Hydrate_Button(Purchase_Frame_Robux_Buy_Button, function()
+        local Crate_Name = Peek(Purchase_Frame_Name)
+
+        if not Crate_Name then
+            return
+        end
+
+        if not (Peek(Fusion_Values.Tutorial_Step) > 9) then
+            local Notification = World:entity()
+            World:set(Notification, Components.Text, "Complete the tutorial first")
+            World:add(Notification, Components.Tags.Notification)
+
+            return
+        end
+
+        MarketPlaceService:PromptProductPurchase(LocalPlayer, Crates[Crate_Name].ProductId)
+    end)
 
     Hydrate_Button(Restock, function()
         MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds.Restock)
@@ -961,7 +1132,7 @@ local function Setup_One_Time_Offer(LocalEntity: Types.Entity, PlayerGui: Player
 
     local Price = Get_Product_Price(ProductIds["One Time Offer"])
 
-    Price_Text_Label.Text = `{Price} R$`
+    Price_Text_Label.Text = `{Price}`
 
     Hydrate_Button(Buy_Button, function()
         MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["One Time Offer"])
