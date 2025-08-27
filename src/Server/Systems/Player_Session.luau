@@ -102,6 +102,22 @@ local function Handle_New_Players()
                 ProfileData.Tutorial_Step ~= 10 and ProfileData.Tutorial_Step or 11
             )
 
+            if ProfileData.Tutorial_Step == 10 then
+                World:set(PlayerEntity, Components.Tutorial_Step, 11)
+            elseif ProfileData.Tutorial_Step == 1 then
+                World:set(PlayerEntity, Components.Tutorial_Step, 0)
+            elseif ProfileData.Tutorial_Step == 7 then
+                World:set(PlayerEntity, Components.Tutorial_Step, 4)
+
+                World:set(PlayerEntity, Components.Cash, 500)
+            elseif ProfileData.Tutorial_Step == 6 then
+                World:set(PlayerEntity, Components.Tutorial_Step, 4)
+
+                World:set(PlayerEntity, Components.Cash, 500)
+            else
+                World:set(PlayerEntity, Components.Tutorial_Step, ProfileData.Tutorial_Step)
+            end
+
             if ProfileData.BoughtOneTimeOffer then
                 World:add(PlayerEntity, Components.Tags.BoughtOneTimeOffer)
             end
