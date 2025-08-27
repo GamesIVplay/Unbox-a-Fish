@@ -52,7 +52,7 @@ return {
 
             if not Skip_Rate_Limit(Player_Entity) then
                 Network.Notification.Fire(Player, {
-                    Text = "Your on cooldown",
+                    Text = "You're on cooldown",
                 })
                 continue
             end

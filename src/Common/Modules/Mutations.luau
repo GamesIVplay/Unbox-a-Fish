@@ -8,19 +8,15 @@ export type Mutation = {
 local Mutations: { [Types.Mutation]: Mutation } = {
     ["Gold"] = {
         Chance = 0.05,
-        Multiplier = 2,
+        Multiplier = 5,
     },
     ["Diamond"] = {
         Chance = 0.02,
-        Multiplier = 3,
+        Multiplier = 20,
     },
-    --[[    ["Huge"] = {
-        Chance = 0.015,
-        Multiplier = 3.5,
-    }, ]]
     ["Rainbow"] = {
         Chance = 0.01,
-        Multiplier = 4,
+        Multiplier = 50,
     },
 }
 
