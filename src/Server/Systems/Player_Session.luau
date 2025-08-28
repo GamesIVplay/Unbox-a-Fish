@@ -1,3 +1,4 @@
+local BadgeService = game:GetService("BadgeService")
 local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,6 +24,8 @@ local Log = require(ReplicatedStorage.Common.Log)
 local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
+
+local Badges = require(ReplicatedStorage.Common.Modules.Badges)
 
 local PlayersRemoving = Collect(Players.PlayerRemoving)
 
@@ -59,6 +62,12 @@ local function Update_Friend_Boosts()
 
         World:set(PlayerEntity, Components.FriendBoost, (Friends * 0.1) + 1)
     end
+end
+
+local function Add_Badges(Player: Player)
+    BadgeService:AwardBadge(Player.UserId, Badges["Unbox"])
+    BadgeService:AwardBadge(Player.UserId, Badges["A"])
+    BadgeService:AwardBadge(Player.UserId, Badges["Fish!"])
 end
 
 local function Handle_New_Players()
@@ -224,6 +233,8 @@ local function Handle_New_Players()
             Update_Friend_Boosts()
 
             Handle_Gamepasses(PlayerEntity)
+
+            Add_Badges(Player)
 
             Log.Info(`Setup {Player.Name}'s entity`)
         end)
