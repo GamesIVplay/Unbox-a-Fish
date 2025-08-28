@@ -21,6 +21,7 @@ local World = require(ReplicatedStorage.Common.World)
 
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
+local Util = require(ReplicatedStorage.Common.Modules.Util)
 
 local Queued_Fish =
     World:query(Components.Player, Components.LastPlayed, Pair(Components.Relationships.Queued, Components.Tags.Fish))
@@ -116,7 +117,7 @@ return {
 
             if Total_Offline_Cash > 0 then
                 Network.Notification.Fire(Player, {
-                    Text = `You earned ${Total_Offline_Cash} while you were away!`,
+                    Text = `You earned ${Util.Format_Number_With_Commas(Total_Offline_Cash)} while you were away!`,
                     Duration = 5,
                 })
             end

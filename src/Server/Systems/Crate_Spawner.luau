@@ -27,7 +27,9 @@ local Plots_With_Owner_Without_Crate = World:query(Components.Renderable)
     :without(Pair(Components.Relationships.Crate, Jecs.Wildcard))
     :cached()
 
-local function Roll_Crate(LuckMultiplier: number)
+--[[ OLD ROLL
+
+    local function Roll_Crate(LuckMultiplier: number)
     LuckMultiplier = LuckMultiplier
 
     local Total = 0
@@ -50,7 +52,34 @@ local function Roll_Crate(LuckMultiplier: number)
     end
 
     return
+end]]
+
+local function Roll_Crate(LuckMultiplier: number)
+    local Total = 0
+    local Adjusted = {}
+
+    for Name, Data in Crates do
+        -- Blend original chance with a flat 1 using luck
+        -- Lower weight still means rarer
+        local LerpFactor = (LuckMultiplier - 1) / 200 -- Tune this number (200) to control how fast luck scales
+        local Weighted = Data.Chance * (1 - LerpFactor) + 1 * LerpFactor
+        Adjusted[Name] = Weighted
+        Total += Weighted
+    end
+
+    local Roll = math.random() * Total
+    local Cumulative = 0
+
+    for Name, Weight in Adjusted do
+        Cumulative += Weight
+        if Roll <= Cumulative then
+            return Name, Crates[Name]
+        end
+    end
+
+    return
 end
+
 
 return {
     name = script.Name,
