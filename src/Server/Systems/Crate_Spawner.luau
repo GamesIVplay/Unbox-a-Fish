@@ -27,49 +27,34 @@ local Plots_With_Owner_Without_Crate = World:query(Components.Renderable)
     :without(Pair(Components.Relationships.Crate, Jecs.Wildcard))
     :cached()
 
---[[ OLD ROLL
-
-    local function Roll_Crate(LuckMultiplier: number)
-    LuckMultiplier = LuckMultiplier
-
-    local Total = 0
-    local Adjusted = {}
-
-    for Name, Data in Crates do
-        local Weighted = Data.Chance ^ (1 / LuckMultiplier)
-        Adjusted[Name] = Weighted
-        Total += Weighted
-    end
-
-    local Roll = math.random() * Total
-    local Cumulative = 0
-
-    for Name, Weight in Adjusted do
-        Cumulative += Weight
-        if Roll <= Cumulative then
-            return Name, Crates[Name]
-        end
-    end
-
-    return
-end]]
-
 local function Roll_Crate(LuckMultiplier: number)
     local Total = 0
     local Adjusted = {}
 
+    print("Adjusted crate drop chances (%):")
+
     for Name, Data in Crates do
-        -- Blend original chance with a flat 1 using luck
-        -- Lower weight still means rarer
-        local LerpFactor = (LuckMultiplier - 1) / 200 -- Tune this number (200) to control how fast luck scales
-        local Weighted = Data.Chance * (1 - LerpFactor) + 1 * LerpFactor
+        -- Rarity bias: bigger boost for rarer crates
+        local RarityBias = math.pow(1 - Data.Chance, 3) -- cube exaggerates difference
+        -- Apply luck: scale tiny chances more noticeably
+        local Weighted = Data.Chance + RarityBias * 0.002 * (LuckMultiplier - 1)
+        -- Cap at 50% to avoid insane probability
+        Weighted = math.min(Weighted, 0.5)
+
         Adjusted[Name] = Weighted
         Total += Weighted
     end
 
+    --[[ Print actual % chances
+    for Name, Weight in Adjusted do
+        local Percent = (Weight / Total) * 100
+        print(string.format("%s: %.4f%%", Name, Percent))
+    end
+    ]]
+
+    -- Roll
     local Roll = math.random() * Total
     local Cumulative = 0
-
     for Name, Weight in Adjusted do
         Cumulative += Weight
         if Roll <= Cumulative then
@@ -79,7 +64,6 @@ local function Roll_Crate(LuckMultiplier: number)
 
     return
 end
-
 
 return {
     name = script.Name,
