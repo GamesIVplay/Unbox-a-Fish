@@ -202,8 +202,6 @@ local function Hydrate_Button(GuiButton: GuiButton, OnActivate: () -> (), HMulti
 end
 
 local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
-    local LocalPlayer = World:get(LocalEntity, Components.Player)
-
     local HUD = PlayerGui:WaitForChild("HUD") :: ScreenGui
 
     local Top = HUD:WaitForChild("Top")
@@ -221,6 +219,49 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     local Tutorial_Arrow = HUD:WaitForChild("Tutorial_Arrow") :: ImageLabel
 
     local OneTimeOffer = HUD:WaitForChild("OneTimeOffer")
+
+    local AutoSwing = HUD:WaitForChild("AutoSwing")
+
+    local Right = HUD:WaitForChild("Right")
+    local Free_Reward = Right:WaitForChild("FreeReward") :: ImageButton
+
+    Hydrate_Button(Free_Reward, function()
+        if Peek(Fusion_Values.Screen) == "FreeReward" then
+            Fusion_Values.Screen:set("HUD")
+        else
+            Fusion_Values.Screen:set("FreeReward")
+        end
+    end)
+
+    Scope:Hydrate(Free_Reward)({
+        Visible = Scope:Computed(function(Use)
+            return (Use(Fusion_Values.Tutorial_Step) > 9)
+        end),
+    })
+
+    Hydrate_Button(AutoSwing, function()
+        if Peek(Fusion_Values.Auto_Swing) == true then
+            Fusion_Values.Auto_Swing:set(false)
+        else
+            Fusion_Values.Auto_Swing:set(true)
+        end
+    end)
+
+    Scope:Hydrate(AutoSwing)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Auto_Swing_Visible)
+        end),
+    })
+
+    Scope:Hydrate(AutoSwing)({
+        ImageColor3 = Scope:Computed(function(Use)
+            if Use(Fusion_Values.Auto_Swing) then
+                return Color3.fromRGB(21, 255, 80)
+            else
+                return Color3.fromRGB(255, 71, 71)
+            end
+        end),
+    })
 
     Hydrate_Button(House, function()
         local PlotEntity = World:target(LocalEntity, Components.Relationships.Plot)
@@ -1143,6 +1184,42 @@ local function Setup_One_Time_Offer(LocalEntity: Types.Entity, PlayerGui: Player
     end)
 end
 
+local function Setup_Notifications(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local Notifications = PlayerGui:WaitForChild("Notifications") :: ScreenGui
+    local Notifications_Frame = Notifications:WaitForChild("Notifications") :: Frame
+
+    Scope:Hydrate(Notifications_Frame)({
+        Position = Scope:Computed(function(Use)
+            if Use(Fusion_Values.Auto_Swing_Visible) then
+                return UDim2.fromScale(0.5, 0.76)
+            else
+                return UDim2.fromScale(0.5, 0.83)
+            end
+        end),
+    })
+end
+
+local function Setup_Free_Reward(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+
+    local FreeReward = Panels:WaitForChild("FreeReward") :: ImageLabel
+    local Verify_Button = FreeReward:WaitForChild("Verify") :: ImageButton
+
+    local Close = FreeReward:WaitForChild("Close") :: ImageButton
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+
+    Scope:Hydrate(FreeReward)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "FreeReward"
+        end),
+    })
+
+    Hydrate_Button(Verify_Button, function() end)
+end
+
 return {
     name = script.Name,
     phase = Phases.InitPhases.Init,
@@ -1160,6 +1237,8 @@ return {
             Setup_Crate_Shop(LocalEntity, PlayerGui)
             Setup_Upgrade_Shop(LocalEntity, PlayerGui)
             Setup_One_Time_Offer(LocalEntity, PlayerGui)
+            Setup_Notifications(LocalEntity, PlayerGui)
+            Setup_Free_Reward(LocalEntity, PlayerGui)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then

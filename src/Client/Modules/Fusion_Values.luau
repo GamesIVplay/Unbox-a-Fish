@@ -13,4 +13,6 @@ return table.freeze({
     Restock_Time = Scope:Value(0),
     Stock = Scope:Value({}),
     Bought_One_Time_Offer = Scope:Value(true),
+    Auto_Swing = Scope:Value(false),
+    Auto_Swing_Visible = Scope:Value(false),
 })

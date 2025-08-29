@@ -2,6 +2,11 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
+local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Peek = Fusion.peek
+
+local Fusion_Values = require(ReplicatedFirst.Client.Modules.Fusion_Values)
+
 local ImpactHaptic = Instance.new("HapticEffect")
 ImpactHaptic.Position = Vector3.new(0, 0, 0)
 ImpactHaptic.Radius = 1
@@ -34,6 +39,7 @@ local SwingParams = OverlapParams.new()
 SwingParams.FilterType = Enum.RaycastFilterType.Include
 
 local REACH = 12
+local LAST_AUTO_SWING = os.time()
 
 return {
     name = script.Name,
@@ -69,12 +75,29 @@ return {
         end
 
         if not FoundTool then
+            Fusion_Values.Auto_Swing_Visible:set(false)
             return
         end
 
+        if Peek(Fusion_Values.Screen) == "HUD" and Peek(Fusion_Values.Tutorial_Step) > 9 then
+            Fusion_Values.Auto_Swing_Visible:set(true)
+        else
+            Fusion_Values.Auto_Swing_Visible:set(false)
+        end
+
         local Swung = false
+        local SwingRequest = false
+        local AutoSwingRequest = false
+
+        if Peek(Fusion_Values.Auto_Swing) then
+            AutoSwingRequest = true
+        end
 
         for Input, GPE in InputBegan do
+            if AutoSwingRequest then
+                continue
+            end
+
             if GPE then
                 continue
             end
@@ -84,19 +107,33 @@ return {
             end
 
             if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.KeyCode == Enum.KeyCode.ButtonR2 then
-                Swung = true
+                SwingRequest = true
             end
         end
 
         for _, GPE in TouchTap do
+            if AutoSwingRequest then
+                continue
+            end
+
             if GPE then
                 continue
             end
 
+            SwingRequest = true
+        end
+
+        if SwingRequest and Swing_Rate_Limit() then
             Swung = true
         end
 
-        if Swung and Swing_Rate_Limit() then
+        if AutoSwingRequest and ((os.time() - LAST_AUTO_SWING) > 2) and Swing_Rate_Limit() then
+            Swung = true
+
+            LAST_AUTO_SWING = os.time()
+        end
+
+        if Swung then
             AnimPlayer.PlayAnimation(Animator, {
                 Name = "Hammer [Swing]",
                 Priority = Enum.AnimationPriority.Action,
