@@ -35,7 +35,7 @@ local function Roll_Crate(LuckMultiplier: number)
 
     for Name, Data in Crates do
         -- Rarity bias: bigger boost for rarer crates
-        local RarityBias = math.pow(1 - Data.Chance, 3) -- cube exaggerates difference
+        local RarityBias = math.pow(1 - Data.Chance, 10) -- cube exaggerates difference
         -- Apply luck: scale tiny chances more noticeably
         local Weighted = Data.Chance + RarityBias * 0.002 * (LuckMultiplier - 1)
         -- Cap at 50% to avoid insane probability
@@ -45,12 +45,11 @@ local function Roll_Crate(LuckMultiplier: number)
         Total += Weighted
     end
 
-    --[[ Print actual % chances
+    -- Print actual % chances
     for Name, Weight in Adjusted do
         local Percent = (Weight / Total) * 100
         print(string.format("%s: %.4f%%", Name, Percent))
     end
-    ]]
 
     -- Roll
     local Roll = math.random() * Total
@@ -97,6 +96,14 @@ return {
 
             if World:get(Owner_Entity, Components.Unboxes) < 20 then
                 Luck_Multiplier *= 4
+            end
+
+            if World:get(Owner_Entity, Components.Unboxes) :: number % 10 == 0 then
+                Luck_Multiplier *= 6
+
+                Network.Notification.Fire(Owner_Player, {
+                    Text = "🍀 Pity Boost! 🍀"
+                })
             end
 
             local Crate_Name

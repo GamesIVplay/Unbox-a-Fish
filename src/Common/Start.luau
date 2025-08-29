@@ -1,4 +1,4 @@
-_G.IN_DEV = true
+_G.IN_DEV = false
 _G.JECS_DEBUG = true
 
 local ContextActionService = game:GetService("ContextActionService")

@@ -26,7 +26,7 @@ export type Crate = {
 local Crates: { [string]: Crate } = {
     ["Wood Crate"] = {
         Rarity = "Common",
-        Chance = 0.335,
+        Chance = 0.28,
         Health = 5,
         Price = 100,
         Restock_Chance = 1 / 1,
@@ -70,7 +70,7 @@ local Crates: { [string]: Crate } = {
     },
     ["Bone Crate"] = {
         Rarity = "Rare",
-        Chance = 0.15,
+        Chance = 0.17,
         Health = 25,
         Price = 2000,
         Restock_Chance = 1 / 3,
@@ -94,7 +94,7 @@ local Crates: { [string]: Crate } = {
     },
     ["Steel Crate"] = {
         Rarity = "Rare",
-        Chance = 0.10,
+        Chance = 0.12,
         Health = 60,
         Price = 8000,
         Restock_Chance = 1 / 4,
@@ -164,7 +164,7 @@ local Crates: { [string]: Crate } = {
     },
     ["Abyssal Crate"] = {
         Rarity = "Legendary",
-        Chance = 0.01,
+        Chance = 0.02,
         Health = 700,
         Price = 200000,
         Restock_Chance = 1 / 100,
@@ -187,7 +187,7 @@ local Crates: { [string]: Crate } = {
     },
     ["Kraken Crate"] = {
         Rarity = "Mythic",
-        Chance = 0.005,
+        Chance = 0.01,
         Health = 1400,
         Price = 1000000,
         Restock_Chance = 1 / 240,
