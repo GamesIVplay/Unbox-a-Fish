@@ -11,6 +11,7 @@ local Components: {
     Cash: Types.Id<number>,
     Tool_Level: Types.Id<number>,
     Luck_Level: Types.Id<number>,
+        Auto_Swing_Level: Types.Id<number>,
     Index: Types.Id<{ any }>,
     Inventory: Types.Id<{ any }>,
     Crate_Queue: Types.Id<{ [number]: string }>,
@@ -57,6 +58,7 @@ local Components: {
         BoughtOneTimeOffer: Types.Entity,
         DoubleLuck: Types.Entity,
         DoubleMutations: Types.Entity,
+        Claimed_Group_Rewards: Types.Entity
     },
 
     Relationships: {
@@ -78,6 +80,7 @@ local Components: {
         Cash = World:component(),
         Tool_Level = World:component(),
         Luck_Level = World:component(),
+        Auto_Swing_Level = World:component(),
         Index = World:component(),
         Inventory = World:component(),
         Crate_Queue = World:component(),
@@ -124,6 +127,7 @@ local Components: {
             BoughtOneTimeOffer = World:component(),
             DoubleLuck = World:component(),
             DoubleMutations = World:component(),
+            Claimed_Group_Rewards = World:component()
         },
         Relationships = {
             Max = World:component(),

@@ -66,6 +66,14 @@ local function Handle_Tool_Level_Changes(LocalEntity: Types.Entity)
     end
 end
 
+local function Handle_Auto_Swing_Level_Changes(LocalEntity: Types.Entity)
+    for _, Value in Network.PlayerChanges.AutoSwingLevel.Iter() do
+        World:set(LocalEntity, Components.Auto_Swing_Level, Value)
+
+        Fusion_Values.Auto_Swing_Level:set(Value)
+    end
+end
+
 local function Handle_Luck_Level_Changes(LocalEntity: Types.Entity)
     for _, Value in Network.PlayerChanges.LuckLevel.Iter() do
         World:set(LocalEntity, Components.Luck_Level, Value)
@@ -115,7 +123,7 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
                     return
                 end
 
-                MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["x2 Luck 10 Min"])
+                MarketPlaceService:PromptProductPurchase(LocalPlayer, 8437883537)
             end)
 
             local Mutation_Zone = SimpleZone.fromPart(Mutation_Boost.Touch)
@@ -537,6 +545,8 @@ return {
         Handle_Tool_Level_Changes(LocalEntity)
 
         Handle_Luck_Level_Changes(LocalEntity)
+
+        Handle_Auto_Swing_Level_Changes(LocalEntity)
 
         Handle_Index_Changes(LocalEntity)
 

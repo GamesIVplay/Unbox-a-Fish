@@ -36,10 +36,16 @@ local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 local Colors = require(ReplicatedStorage.Common.Modules.Colors)
 local Crates = require(ReplicatedStorage.Common.Modules.Crates)
 local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
+local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_Upgrades)
 
 local Types = require(ReplicatedStorage.Common.Types)
 
 local Grant_Purchase_By_Product_Id = {
+    [ProductIds["Max Auto Swing"]] =  function(_, Player_Entity: Types.Entity)
+        World:set(Player_Entity, Components.Auto_Swing_Level, #Auto_Swing_Upgrades)
+
+        return true
+    end,
     [ProductIds["Restock"]] = function(_, Player_Entity: Types.Entity)
         World:set(Player_Entity, Components.Restock_Time, os.time())
 

@@ -15,6 +15,7 @@ Start({
     require(Systems.Plot_Loader),
     require(Systems.Upgrade_Tool),
     require(Systems.Upgrade_Luck),
+    require(Systems.Upgrade_Auto_Swing),
     require(Systems.Restock),
     require(Systems.Crate_Buy),
     require(Systems.Crate_Spawner),
@@ -29,7 +30,9 @@ Start({
     require(Systems.Sell),
     require(Systems.Rig),
     require(Systems.Reducer),
+    require(Systems.GroupReward),
     require(Systems.Fish_Cleanup),
     require(Systems.Leaderstats),
+    require(Systems.Leaderboard),
     require(Systems.Player_Data_Replication),
 })

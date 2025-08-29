@@ -16,6 +16,8 @@ local Network = require(ReplicatedFirst.Network)
 
 local Map = workspace:WaitForChild("Map")
 
+local Plots = Map:WaitForChild("Plots")
+
 local Interactables = Map:WaitForChild("Interactables")
 
 local Upgrade_Shop = Interactables:WaitForChild("Upgrade_Shop") :: Model
@@ -52,6 +54,7 @@ local Types = require(ReplicatedStorage.Common.Types)
 
 local Confetti = require(ReplicatedStorage.Common.Modules.Confetti)
 
+local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_Upgrades)
 local Crates = require(ReplicatedStorage.Common.Modules.Crates)
 local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
 local Luck_Prices = require(ReplicatedStorage.Common.Modules.Luck_Prices)
@@ -773,6 +776,41 @@ local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGu
     local Luck_Info = Luck:WaitForChild("Info") :: Frame
     local Luck_Boost = Luck_Info:WaitForChild("Boost") :: TextLabel
 
+    local Auto_Swing = Scroll:WaitForChild("AutoSwing") :: ImageLabel
+    local Auto_Swing_Buy_Button = Auto_Swing:WaitForChild("Buy") :: ImageButton
+    local Auto_Swing_Price_Text = Auto_Swing_Buy_Button:WaitForChild("Price") :: TextLabel
+    local Auto_Swing_Info = Auto_Swing:WaitForChild("Info") :: Frame
+    local Auto_Swing_Boost = Auto_Swing_Info:WaitForChild("Boost") :: TextLabel
+
+    local Current_Auto_Swing_Upgrade_Data = Scope:Computed(function(Use)
+        return Auto_Swing_Upgrades[Use(Fusion_Values.Auto_Swing_Level)]
+    end)
+
+    local Next_Auto_Swing_Upgrade_Data = Scope:Computed(function(Use)
+        return Auto_Swing_Upgrades[Use(Fusion_Values.Auto_Swing_Level) + 1]
+    end)
+
+    Scope:Hydrate(Auto_Swing_Price_Text)({
+        Text = Scope:Computed(function(Use)
+            local Next_Data = Use(Next_Auto_Swing_Upgrade_Data)
+
+            return Next_Data and `${Util.Format_Number_With_Commas(Next_Data.Price)}` or "Max"
+        end),
+    })
+
+    Scope:Hydrate(Auto_Swing_Boost)({
+        Text = Scope:Computed(function(Use)
+            local Current_Data = Use(Current_Auto_Swing_Upgrade_Data)
+            local Next_Data = Use(Next_Auto_Swing_Upgrade_Data)
+
+            return `{Current_Data.Cooldown}s -> {Next_Data and Next_Data.Cooldown.."s" or "?"}`
+        end),
+    })
+
+    Hydrate_Button(Auto_Swing_Buy_Button, function()
+        Network.Requests.UpgradeAutoSwing.Fire()
+    end)
+
     local Current_Tool_Data = Scope:Computed(function(Use)
         local Current_Tool_Level = Use(Fusion_Values.Tool_Level)
 
@@ -784,13 +822,6 @@ local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGu
 
         return Hammers[Current_Tool_Level + 1]
     end)
-
-    Scope:Hydrate(Tool_Title)({
-        Text = Scope:Computed(function(Use)
-            local Data = Use(Next_Tool_Data)
-            return Data and Data.Name or "?"
-        end),
-    })
 
     Scope:Hydrate(Tool_Boost)({
         Text = Scope:Computed(function(Use)
@@ -1217,7 +1248,23 @@ local function Setup_Free_Reward(LocalEntity: Types.Entity, PlayerGui: PlayerGui
         end),
     })
 
-    Hydrate_Button(Verify_Button, function() end)
+    Hydrate_Button(Verify_Button, function()
+        Network.Requests.GroupReward.Fire()
+    end)
+end
+
+local function Setup_Max_Auto_Swing_Prompts(LocalEntity: Types.Entity)
+    local LocalPlayer = World:get(LocalEntity, Components.Player)
+
+    for _, Plot_Model: Model in Plots:GetChildren() do
+        local AutoClickerPass = Plot_Model:WaitForChild("AutoClickerPass")
+
+        local Image_Button = AutoClickerPass:FindFirstChild("ImageButton", true) :: ImageButton
+
+        Hydrate_Button(Image_Button, function()
+            MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["Max Auto Swing"])
+        end)
+    end
 end
 
 return {
@@ -1239,6 +1286,7 @@ return {
             Setup_One_Time_Offer(LocalEntity, PlayerGui)
             Setup_Notifications(LocalEntity, PlayerGui)
             Setup_Free_Reward(LocalEntity, PlayerGui)
+            Setup_Max_Auto_Swing_Prompts(LocalEntity)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then

@@ -22,6 +22,7 @@ return {
         World:set(LocalEntity, Components.Cash, 0)
         World:set(LocalEntity, Components.Tool_Level, 1)
         World:set(LocalEntity, Components.Luck_Level, 1)
+        World:set(LocalEntity, Components.Auto_Swing_Level, 1)
         World:set(LocalEntity, Components.Index, {})
 
         World:set(LocalEntity, Components.Tutorial_Step, 0)

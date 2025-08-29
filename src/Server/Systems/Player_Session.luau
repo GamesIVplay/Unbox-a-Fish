@@ -1,8 +1,12 @@
 local BadgeService = game:GetService("BadgeService")
+local DataStoreService = game:GetService("DataStoreService")
 local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+
+local Cash_Leaderboard_Data_Store = DataStoreService:GetOrderedDataStore("Cash")
+local Unbox_Leaderboard_Data_Store = DataStoreService:GetOrderedDataStore("Unbox")
 
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
@@ -96,6 +100,7 @@ local function Handle_New_Players()
             World:set(PlayerEntity, Components.Cash, ProfileData.Cash)
             World:set(PlayerEntity, Components.Tool_Level, ProfileData.Tool_Level)
             World:set(PlayerEntity, Components.Luck_Level, ProfileData.Luck_Level)
+            World:set(PlayerEntity, Components.Auto_Swing_Level, ProfileData.Auto_Swing_Level)
             World:set(PlayerEntity, Components.Index, ProfileData.Index)
             World:set(PlayerEntity, Components.Inventory, ProfileData.Inventory)
             World:set(PlayerEntity, Components.Crate_Queue, ProfileData.Crate_Queue)
@@ -133,6 +138,10 @@ local function Handle_New_Players()
                 World:add(PlayerEntity, Components.Tags.BoughtOneTimeOffer)
             end
 
+            if ProfileData.Claimed_Group_Rewards then
+                World:add(PlayerEntity, Components.Tags.Claimed_Group_Rewards)
+            end
+
             World:set(PlayerEntity, Components.LastPlayed, ProfileData.LastPlayed)
             World:set(PlayerEntity, Components.Unboxes, ProfileData.Unboxes)
             World:set(PlayerEntity, Components.Restock_Time, ProfileData.Restock_Time)
@@ -157,6 +166,7 @@ local function Handle_New_Players()
                 ProfileData.Cash = World:get(PlayerEntity, Components.Cash)
                 ProfileData.Tool_Level = World:get(PlayerEntity, Components.Tool_Level)
                 ProfileData.Luck_Level = World:get(PlayerEntity, Components.Luck_Level)
+                ProfileData.Auto_Swing_Level = World:get(PlayerEntity, Components.Auto_Swing_Level)
                 ProfileData.Inventory = World:get(PlayerEntity, Components.Inventory)
                 ProfileData.Index = World:get(PlayerEntity, Components.Index)
                 ProfileData.Crate_Queue = World:get(PlayerEntity, Components.Crate_Queue)
@@ -169,6 +179,7 @@ local function Handle_New_Players()
                 ProfileData.Double_Mutation_Time_Remaining =
                     World:get(PlayerEntity, Components.Double_Mutation_Time_Remaining)
                 ProfileData.Double_Luck_Time_Remaining = World:get(PlayerEntity, Components.Double_Luck_Time_Remaining)
+                ProfileData.Claimed_Group_Rewards = World:has(PlayerEntity, Components.Tags.Claimed_Group_Rewards)
 
                 local Fish = {}
 
@@ -243,8 +254,34 @@ local function Handle_New_Players()
     end
 end
 
+local function Update_Leaderboard_Data(Player: Player)
+    local PlayerEntity = Registry.Get("Players", Player)
+
+    if not PlayerEntity then
+        return
+    end
+
+    local Cash = World:get(PlayerEntity, Components.Cash)
+    local Unboxes = World:get(PlayerEntity, Components.Unboxes)
+
+    task.spawn(function()
+        local Success, Error = pcall(function()
+            Cash_Leaderboard_Data_Store:SetAsync(Player.UserId, Cash)
+            Unbox_Leaderboard_Data_Store:SetAsync(Player.UserId, Unboxes)
+        end)
+
+        if not Success then
+            Log.Warn(`Failed to update leaderboard data for {Player.Name}: {Error}`)
+        end
+    end)
+end
+
 local function Handle_Leaving_Players()
     for Player in PlayersRemoving do
+        if not _G.IN_DEV then
+            Update_Leaderboard_Data(Player)
+        end
+
         Registry.Delete("Players", Player)
 
         Update_Friend_Boosts()

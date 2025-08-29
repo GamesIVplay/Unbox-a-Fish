@@ -7,6 +7,7 @@ return table.freeze({
     Cash = Scope:Value(0),
     Tool_Level = Scope:Value(1),
     Luck_Level = Scope:Value(1),
+    Auto_Swing_Level = Scope:Value(1),
     Index = Scope:Value({}),
     Tutorial_Step = Scope:Value(11),
     Friend_Boost = Scope:Value(1),

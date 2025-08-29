@@ -7,6 +7,8 @@ local Peek = Fusion.peek
 
 local Fusion_Values = require(ReplicatedFirst.Client.Modules.Fusion_Values)
 
+local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_Upgrades)
+
 local ImpactHaptic = Instance.new("HapticEffect")
 ImpactHaptic.Position = Vector3.new(0, 0, 0)
 ImpactHaptic.Radius = 1
@@ -47,6 +49,8 @@ return {
     system = function()
         local Local_Entity = Registry.Get("Players", "Local")
         local Local_Player = World:get(Local_Entity, Components.Player) :: Player
+
+        local Auto_Swing_Level = World:get(Local_Entity, Components.Auto_Swing_Level)
 
         local Character = World:get(Local_Entity, Components.Renderable) :: Model?
 
@@ -127,7 +131,7 @@ return {
             Swung = true
         end
 
-        if AutoSwingRequest and ((os.time() - LAST_AUTO_SWING) > 2) and Swing_Rate_Limit() then
+        if AutoSwingRequest and ((os.time() - LAST_AUTO_SWING) > Auto_Swing_Upgrades[Auto_Swing_Level].Cooldown) and Swing_Rate_Limit() then
             Swung = true
 
             LAST_AUTO_SWING = os.time()

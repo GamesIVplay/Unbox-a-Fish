@@ -91,6 +91,12 @@ scope Requests {
        Call: SingleSync
     }
 
+    event UpgradeAutoSwing {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync
+    }
+
     event BuyCrate {
        From: Client,
        Type: Reliable,
@@ -143,6 +149,12 @@ scope Requests {
        Type: Reliable,
        Call: SingleSync
     }
+    
+    event GroupReward {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync
+    }
 }
 
 scope PlayerChanges {
@@ -161,6 +173,13 @@ scope PlayerChanges {
     }
 
     event LuckLevel {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync, 
+        Data: Types.ToolLevel 
+    }
+
+    event AutoSwingLevel {
         From: Server,
         Type: Reliable,
         Call: SingleSync, 

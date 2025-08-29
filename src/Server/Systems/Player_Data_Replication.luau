@@ -169,6 +169,19 @@ local function Replicate_Luck_Level(Player: Player, Entity: Types.Entity)
     end
 end
 
+local function Replicate_Auto_Swing_Level(Player: Player, Entity: Types.Entity)
+    local Auto_Swing_Level = World:get(Entity, Components.Auto_Swing_Level)
+    local Previous_Auto_Swing_Level = World:get(Entity, Pair(Components.Relationships.Previous, Components.Auto_Swing_Level))
+
+    if Auto_Swing_Level ~= Previous_Auto_Swing_Level then
+        Network.PlayerChanges.AutoSwingLevel.Fire(Player, Auto_Swing_Level)
+
+        World:set(Entity, Pair(Components.Relationships.Previous, Components.Auto_Swing_Level), Auto_Swing_Level)
+
+        Log.Info(`{Player.Name}'s auto swing level was changed to {Auto_Swing_Level}`)
+    end
+end
+
 local function Replicate_Index(Player: Player, Entity: Types.Entity)
     local Index = World:get(Entity, Components.Index)
 
@@ -278,6 +291,8 @@ return {
             Replicate_Inventory(Player, Entity)
 
             Replicate_Luck_Level(Player, Entity)
+
+            Replicate_Auto_Swing_Level(Player, Entity)
 
             Replicate_Index(Player, Entity)
 
