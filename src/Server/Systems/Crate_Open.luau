@@ -92,6 +92,10 @@ return {
                 Mutation_Multiplier *= 2
             end
 
+            if World:get(Plot_Owner, Components.Unboxes) <= 20 then
+                Mutation_Multiplier *= 4
+            end
+
             local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name, Mutation_Multiplier)
 
             if Tutorial_Step == 0 then

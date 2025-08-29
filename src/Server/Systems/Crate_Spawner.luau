@@ -95,6 +95,10 @@ return {
                 Luck_Multiplier *= 2
             end
 
+            if World:get(Owner_Entity, Components.Unboxes) < 20 then
+                Luck_Multiplier *= 4
+            end
+
             local Crate_Name
             local Crate_Data
 
