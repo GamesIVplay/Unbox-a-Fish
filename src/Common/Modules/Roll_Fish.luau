@@ -19,21 +19,36 @@ local function Roll_Fish(Crate: string)
     return
 end
 
-local function Roll_Mutation(Mutation_Multiplier: number?): Types.Mutation?
-    for Mutation_Name, Data in Mutations do
-        local Chance = Data.Chance
-
-        if Mutation_Multiplier then
-            Chance *= Mutation_Multiplier
+local function Roll_Mutation(Mutation_Multiplier: number?, Guarantee_Mutation: boolean): Types.Mutation?
+    if Guarantee_Mutation then
+        local total = 0
+        for _, Data in Mutations do
+            total += Data.Chance
         end
 
-        if math.random() < Chance then
-            return Mutation_Name
+        local roll = math.random()
+        local cumulative = 0
+        for Mutation_Name, Data in Mutations do
+            cumulative += Data.Chance / total
+            if roll <= cumulative then
+                return Mutation_Name
+            end
+        end
+    else
+        for Mutation_Name, Data in Mutations do
+            local Chance = Data.Chance
+            if Mutation_Multiplier then
+                Chance *= Mutation_Multiplier
+            end
+
+            if math.random() < Chance then
+                return Mutation_Name
+            end
         end
     end
+
     return nil
 end
-
-return function(Crate: string, Mutation_Multiplier: number?)
-    return Roll_Fish(Crate), Roll_Mutation(Mutation_Multiplier)
+return function(Crate: string, Mutation_Multiplier: number?, Gurantee_Mutation: boolean)
+    return Roll_Fish(Crate), Roll_Mutation(Mutation_Multiplier, Gurantee_Mutation)
 end

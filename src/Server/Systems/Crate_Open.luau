@@ -96,7 +96,13 @@ return {
                 Mutation_Multiplier *= 4
             end
 
-            local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name, Mutation_Multiplier)
+            local Gurantee_Mutation = false
+
+            if string.find(string.lower(Crate_Name), "mutate") then
+                Gurantee_Mutation = true
+            end
+
+            local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name, Mutation_Multiplier, Gurantee_Mutation)
 
             if Tutorial_Step == 0 then
                 Fish_Mutation = nil
@@ -106,6 +112,8 @@ return {
                 Crate = Crate_Name,
                 CF = Crate_Model:GetPivot(),
                 Owner = Plot_Owner_Player.UserId,
+                MutationMultiplier = Mutation_Multiplier,
+                GuranteeMutation = Gurantee_Mutation,
                 Result = {
                     Name = Fish_Name,
                     Mutation = Fish_Mutation,

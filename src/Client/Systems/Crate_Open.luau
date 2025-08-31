@@ -60,6 +60,8 @@ return {
                 local Crate_Name = Data.Crate
                 local Owner = Data.Owner
                 local CF = Data.CF
+                local Mutation_Multiplier = Data.MutationMultiplier
+                local Gurantee_Mutation = Data.GuranteeMutation
                 local Result_Name = Data.Result.Name
                 local Result_Mutation = Data.Result.Mutation
 
@@ -90,7 +92,7 @@ return {
                     RollCount += 1
 
                     -- Roll a fish
-                    local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name)
+                    local Fish_Name, Fish_Mutation = Roll_Fish(Crate_Name, Mutation_Multiplier, Gurantee_Mutation)
                     local Fish_Data = Fish[Fish_Name]
 
                     local Model = Fish_Data.Models[Fish_Mutation or "Normal"]:Clone() :: Model

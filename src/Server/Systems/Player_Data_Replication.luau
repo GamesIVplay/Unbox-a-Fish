@@ -171,7 +171,8 @@ end
 
 local function Replicate_Auto_Swing_Level(Player: Player, Entity: Types.Entity)
     local Auto_Swing_Level = World:get(Entity, Components.Auto_Swing_Level)
-    local Previous_Auto_Swing_Level = World:get(Entity, Pair(Components.Relationships.Previous, Components.Auto_Swing_Level))
+    local Previous_Auto_Swing_Level =
+        World:get(Entity, Pair(Components.Relationships.Previous, Components.Auto_Swing_Level))
 
     if Auto_Swing_Level ~= Previous_Auto_Swing_Level then
         Network.PlayerChanges.AutoSwingLevel.Fire(Player, Auto_Swing_Level)

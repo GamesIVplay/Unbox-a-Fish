@@ -60,7 +60,6 @@ local function Update_Friend_Boosts()
 
             if Player:IsFriendsWith(TargetPlayer.UserId) then
                 Friends += 1
-                break
             end
         end
 

@@ -803,7 +803,7 @@ local function Setup_Upgrade_Shop(LocalEntity: Types.Entity, PlayerGui: PlayerGu
             local Current_Data = Use(Current_Auto_Swing_Upgrade_Data)
             local Next_Data = Use(Next_Auto_Swing_Upgrade_Data)
 
-            return `{Current_Data.Cooldown}s -> {Next_Data and Next_Data.Cooldown.."s" or "?"}`
+            return `{Current_Data.Cooldown}s -> {Next_Data and Next_Data.Cooldown .. "s" or "?"}`
         end),
     })
 
@@ -995,6 +995,10 @@ local function Setup_Crate_Shop(LocalEntity: Types.Entity, PlayerGui)
     end)
 
     for Crate_Name, Crate_Data in Crates do
+        if Crate_Data.Restock_Chance == 0 then
+            continue
+        end
+
         local Frame = Template:Clone()
 
         local NoStock = Frame:WaitForChild("NoStock")

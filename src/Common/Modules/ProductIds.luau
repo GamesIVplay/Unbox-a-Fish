@@ -7,5 +7,7 @@ return table.freeze({
     ["x2 Luck 10 Min"] = 3377761388,
     ["x2 Mutation 10 Min"] = 3377761198,
     ["15 Min Server Luck x2"] = 3377905847,
-    ["Max Auto Swing"] = 3387524296
+    ["Max Auto Swing"] = 3387524296,
+    ["Legendary Offer"] = 3387559723,
+    ["Mythic Offer"] = 3389812972,
 })

@@ -3,6 +3,8 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+local Characters = workspace:WaitForChild("Characters")
+
 local Assets = ReplicatedStorage:WaitForChild("Assets")
 
 local Highlights = Assets:WaitForChild("Highlights")
@@ -110,6 +112,48 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
     local LocalPlayer = World:get(LocalEntity, Components.Player) :: Player
 
     for _, Value in Network.PlayerChanges.PlotChosen.Iter() do
+        for _, Inst in Interactables.Guranteed_Mutations:GetDescendants() do
+            if Inst.Name == "Touch" then
+                local Zone = SimpleZone.fromPart(Inst)
+
+                Zone:BindToHeartbeat()
+
+                Zone:ListenTo("Player", "Entered", function(TargetPlayer: Player)
+                    if TargetPlayer ~= LocalPlayer then
+                        return
+                    end
+
+                    MarketPlaceService:PromptProductPurchase(LocalPlayer, 3389821746)
+                end)
+            end
+        end
+
+        local Legendary_Offer = Interactables.Legendary_Offer
+        local Legendary_Zone = SimpleZone.fromPart(Legendary_Offer.Touch)
+
+        Legendary_Zone:BindToHeartbeat()
+
+        Legendary_Zone:ListenTo("Player", "Entered", function(TargetPlayer: Player)
+            if TargetPlayer ~= LocalPlayer then
+                return
+            end
+
+            MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["Legendary Offer"])
+        end)
+
+        local Mythic_Offer = Interactables.Mythic_Offer
+        local Mythic_Zone = SimpleZone.fromPart(Mythic_Offer.Touch)
+
+        Mythic_Zone:BindToHeartbeat()
+
+        Mythic_Zone:ListenTo("Player", "Entered", function(TargetPlayer: Player)
+            if TargetPlayer ~= LocalPlayer then
+                return
+            end
+
+            MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["Mythic Offer"])
+        end)
+
         for _, Model: Model in Plots:GetChildren() do
             local Luck_Boost = Model:WaitForChild("Luck_Boost") :: Model
             local Mutation_Boost = Model:WaitForChild("Mutation_Boost")
@@ -123,7 +167,7 @@ local function Handle_Plot_Assign(LocalEntity: Types.Entity)
                     return
                 end
 
-                MarketPlaceService:PromptProductPurchase(LocalPlayer, 8437883537)
+                MarketPlaceService:PromptProductPurchase(LocalPlayer, ProductIds["x2 Luck 10 Min"])
             end)
 
             local Mutation_Zone = SimpleZone.fromPart(Mutation_Boost.Touch)
@@ -534,6 +578,64 @@ local function Handle_Tool_Rigged_Animation(LocalEntity: Types.Entity)
     })
 end
 
+local function Add_Gift_Prompts(LocalEntity: Types.Entity)
+    local LocalCharacter = World:get(LocalEntity, Components.Renderable)
+
+    if not LocalCharacter then
+        return
+    end
+
+    local FoundItem = false
+
+    for _, Inst in LocalCharacter:GetChildren() do
+        if Inst:HasTag("Item") then
+            FoundItem = true
+        end
+    end
+
+    for _, Character: Model in Characters:GetChildren() do
+        if Character == LocalCharacter then
+            continue
+        end
+
+        local RootPart = Character:FindFirstChild("HumanoidRootPart")
+
+        if not RootPart then
+            continue
+        end
+
+        local Prompt = RootPart:FindFirstChildOfClass("ProximityPrompt")
+
+        if not Prompt then
+            Prompt = Instance.new("ProximityPrompt")
+            Prompt.ClickablePrompt = true
+            Prompt.Enabled = true
+            Prompt.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally
+            Prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+            Prompt.KeyboardKeyCode = Enum.KeyCode.E
+            Prompt.MaxActivationDistance = 5
+            Prompt.RequiresLineOfSight = false
+            Prompt.HoldDuration = 0.5
+            Prompt.ActionText = "Gift"
+            Prompt.ObjectText = ""
+            Prompt.Style = Enum.ProximityPromptStyle.Custom
+            Prompt.Parent = RootPart
+
+            Prompt.Triggered:Connect(function()
+                local ServerEntity = Character:GetAttribute("ServerEntity")
+
+                if not ServerEntity then
+                    return
+                end
+
+                Network.Requests.Gift.Fire(ServerEntity)
+            end)
+        end
+
+        Prompt.Enabled = FoundItem
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -575,6 +677,8 @@ return {
         Handle_One_Time_Offer_Bought(LocalEntity)
 
         Handle_Tool_Rigged_Animation(LocalEntity)
+
+        Add_Gift_Prompts(LocalEntity)
     end,
     runConditions = {},
 }

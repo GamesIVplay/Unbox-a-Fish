@@ -131,7 +131,11 @@ return {
             Swung = true
         end
 
-        if AutoSwingRequest and ((os.time() - LAST_AUTO_SWING) > Auto_Swing_Upgrades[Auto_Swing_Level].Cooldown) and Swing_Rate_Limit() then
+        if
+            AutoSwingRequest
+            and ((os.time() - LAST_AUTO_SWING) > Auto_Swing_Upgrades[Auto_Swing_Level].Cooldown)
+            and Swing_Rate_Limit()
+        then
             Swung = true
 
             LAST_AUTO_SWING = os.time()
@@ -158,11 +162,11 @@ return {
                 Hitbox.Touched:Connect(function(Hit)
                     local Crate = Hit.Parent :: Model
 
-                    if Crate:GetAttribute("Owner") ~= Local_Player.UserId then
-                        return
-                    end
+                    local ServerEntity = Crate:GetAttribute("ServerEntity")
 
-                    Hit_Crate_Entity = Crate:GetAttribute("ServerEntity")
+                    if ServerEntity then
+                        Hit_Crate_Entity = ServerEntity
+                    end
                 end)
 
                 task.wait(0.05)

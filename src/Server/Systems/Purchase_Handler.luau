@@ -33,15 +33,15 @@ local Log = require(ReplicatedStorage.Common.Log)
 
 local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 
+local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_Upgrades)
 local Colors = require(ReplicatedStorage.Common.Modules.Colors)
 local Crates = require(ReplicatedStorage.Common.Modules.Crates)
 local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
-local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_Upgrades)
 
 local Types = require(ReplicatedStorage.Common.Types)
 
 local Grant_Purchase_By_Product_Id = {
-    [ProductIds["Max Auto Swing"]] =  function(_, Player_Entity: Types.Entity)
+    [ProductIds["Max Auto Swing"]] = function(_, Player_Entity: Types.Entity)
         World:set(Player_Entity, Components.Auto_Swing_Level, #Auto_Swing_Upgrades)
 
         return true
@@ -155,7 +155,47 @@ local Grant_Purchase_By_Product_Id = {
     end,
 
     [ProductIds["15 Min Server Luck x2"]] = function(_, Player_Entity: Types.Entity)
+        local Player = World:get(Player_Entity, Components.Player)
+
         World:set(Components.Server_Double_Luck_End_Time, Components.Server_Double_Luck_End_Time, os.time() + (60 * 15))
+
+        Network.Notification.FireAll({
+            Text = `{Player.Name} activated x2 Server Luck!`,
+        })
+
+        return true
+    end,
+    [ProductIds["Legendary Offer"]] = function(_, Player_Entity: Types.Entity)
+        local Inventory = World:get(Player_Entity, Components.Inventory)
+
+        if not Inventory["Normal"] then
+            Inventory["Normal"] = {}
+        end
+
+        if not Inventory["Normal"]["Bombardiro Crocodilo"] then
+            Inventory["Normal"]["Bombardiro Crocodilo"] = 1
+        else
+            Inventory["Normal"]["Bombardiro Crocodilo"] += 1
+        end
+
+        World:set(Player_Entity, Components.Inventory, Inventory)
+
+        return true
+    end,
+    [ProductIds["Mythic Offer"]] = function(_, Player_Entity: Types.Entity)
+        local Inventory = World:get(Player_Entity, Components.Inventory)
+
+        if not Inventory["Normal"] then
+            Inventory["Normal"] = {}
+        end
+
+        if not Inventory["Normal"]["Tralalero Tralala"] then
+            Inventory["Normal"]["Tralalero Tralala"] = 1
+        else
+            Inventory["Normal"]["Tralalero Tralala"] += 1
+        end
+
+        World:set(Player_Entity, Components.Inventory, Inventory)
 
         return true
     end,

@@ -164,6 +164,7 @@ Queue.Reliable[17] = CreateQueue()
 Queue.Reliable[18] = CreateQueue()
 Queue.Reliable[19] = CreateQueue()
 Queue.Reliable[20] = CreateQueue()
+Queue.Reliable[21] = CreateQueue()
 export type Types_Entity = number
 export type Types_Cash = number
 export type Types_ToolLevel = number
@@ -230,9 +231,9 @@ local function WriteEVENT_AddOwnedHighlight(Value: Model): ()
 	table.insert(SendInstances, Value or Null)
 end
 
-local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
-	-- Allocate BLOCK: 38 bytes
-	local BLOCK_START = Allocate(38)
+local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+	-- Allocate BLOCK: 47 bytes
+	local BLOCK_START = Allocate(47)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
 	buffer.writef64(SendBuffer, BLOCK_START + 1, Value.Owner)
 	local Length = #Value.Crate
@@ -247,11 +248,13 @@ local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, 
 	buffer.writef32(SendBuffer, BLOCK_START + 23, rX)
 	buffer.writef32(SendBuffer, BLOCK_START + 27, rY)
 	buffer.writef32(SendBuffer, BLOCK_START + 31, rZ)
+	buffer.writef64(SendBuffer, BLOCK_START + 35, Value.MutationMultiplier)
+	buffer.writeu8(SendBuffer, BLOCK_START + 43, Value.GuranteeMutation and 1 or 0)
 	local Length = #Value.Result.Name
-	buffer.writeu16(SendBuffer, BLOCK_START + 35, Length)
+	buffer.writeu16(SendBuffer, BLOCK_START + 44, Length)
 	Allocate(Length)
 	buffer.writestring(SendBuffer, SendOffset, Value.Result.Name, Length)
-	buffer.writeu8(SendBuffer, BLOCK_START + 37, Value.Result.Mutation ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 46, Value.Result.Mutation ~= nil and 1 or 0)
 	if Value.Result.Mutation ~= nil then
 		-- Allocate BLOCK: 1 bytes
 		local BLOCK_START = Allocate(1)
@@ -358,38 +361,45 @@ local function Requests_ReadEVENT_GroupReward(): (nil)
 	return nil
 end
 
+local function Requests_ReadEVENT_Gift(): (number)
+	-- Read BLOCK: 8 bytes
+	local BLOCK_START = Read(8)
+	local Value = buffer.readf64(RecieveBuffer, BLOCK_START + 0)
+	return Value
+end
+
 local function PlayerChanges_WriteEVENT_Cash(Value: number): ()
 	-- Allocate BLOCK: 9 bytes
 	local BLOCK_START = Allocate(9)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 21)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 22)
 	buffer.writef64(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_ToolLevel(Value: number): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 22)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 23)
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_LuckLevel(Value: number): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 23)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 24)
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_AutoSwingLevel(Value: number): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 24)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 25)
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_Index(Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 25)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 26)
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value do
 		Elements_1 += 1
@@ -430,14 +440,14 @@ end
 local function PlayerChanges_WriteEVENT_TutorialStep(Value: number): ()
 	-- Allocate BLOCK: 2 bytes
 	local BLOCK_START = Allocate(2)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 26)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 27)
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_FriendBoost(Value: number): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 27)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 28)
 	if Value > 65504 then
 		buffer.writeu16(SendBuffer, BLOCK_START + 1, 0b0_11111_0000000000)
 	elseif Value < -65504 then
@@ -466,21 +476,21 @@ end
 local function PlayerChanges_WriteEVENT_PlotChosen(Value: Model): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 28)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 29)
 	table.insert(SendInstances, Value or Null)
 end
 
 local function PlayerChanges_WriteEVENT_RestockTime(Value: number): ()
 	-- Allocate BLOCK: 9 bytes
 	local BLOCK_START = Allocate(9)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 29)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 30)
 	buffer.writef64(SendBuffer, BLOCK_START + 1, Value)
 end
 
 local function PlayerChanges_WriteEVENT_Stock(Value: {[string]: number}): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 30)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 31)
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value do
 		Elements_1 += 1
@@ -498,7 +508,7 @@ end
 local function PlayerChanges_WriteEVENT_BoughtOneTimeOffer(Value: boolean): ()
 	-- Allocate BLOCK: 2 bytes
 	local BLOCK_START = Allocate(2)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 31)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 32)
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value and 1 or 0)
 end
 
@@ -605,6 +615,10 @@ if not RunService:IsRunning() then
 			Next = NOOP
 		},
 		GroupReward = {
+			Iter = NOOP,
+			Next = NOOP
+		},
+		Gift = {
 			Iter = NOOP,
 			Next = NOOP
 		},
@@ -760,6 +774,8 @@ Reliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instance
 			Push(Queue.Reliable[19], table.pack(Player, Requests_ReadEVENT_SellAll()))
 		elseif Index == 20 then
 			Push(Queue.Reliable[20], table.pack(Player, Requests_ReadEVENT_GroupReward()))
+		elseif Index == 21 then
+			Push(Queue.Reliable[21], table.pack(Player, Requests_ReadEVENT_Gift()))
 		end
 	end
 end)
@@ -1040,12 +1056,12 @@ local Returns = table.freeze({
 		end,
 	},
 	OpenTrapEffect = {
-		Fire = function(Player: Player, Value: { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		Fire = function(Player: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_OpenTrapEffect(Value)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value: { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		FireAll = function(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1057,7 +1073,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value: { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		FireList = function(List: {Player}, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1069,7 +1085,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value: { Owner: number, Crate: string, CF: CFrame, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		FireExcept = function(Except: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1493,6 +1509,33 @@ local Returns = table.freeze({
 				local index = 0
 				local queue = Queue.Reliable[20]
 				return function (): (number, Player, nil)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end
+		},
+		Gift = {
+			Iter = function(): () -> (number, Player, number)
+				local index = 0
+				local queue = Queue.Reliable[21]
+				return function (): (number, Player, number)
+					index += 1
+					local arguments = Pop(queue)
+					if arguments ~= nil then
+						return index, unpack(arguments, 1, arguments.n)
+					end
+					return 
+				end
+			end,
+			--- @deprecated v0.14.1 -- Use `Iter` instead.
+			Next = function(): () -> (number, Player, number)
+				local index = 0
+				local queue = Queue.Reliable[21]
+				return function (): (number, Player, number)
 					index += 1
 					local arguments = Pop(queue)
 					if arguments ~= nil then

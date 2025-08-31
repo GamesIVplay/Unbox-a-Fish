@@ -214,6 +214,29 @@ local Crates: { [string]: Crate } = {
         },
         ProductId = 3377759503,
     },
+    ["Mutated Abyssal Crate"] = {
+        Rarity = "Legendary",
+        Chance = 0,
+        Health = 1400,
+        Price = 9999999999,
+        Restock_Chance = 0,
+        Min_Stock = 1,
+        Max_Stock = 3,
+        Model = Crate_Models:WaitForChild("Mutated Abyssal Crate"),
+        Viewport_CFrame = CFrame.new(0, -3.6, -12) * CFrame.fromEulerAnglesYXZ(math.rad(0), math.rad(180), math.rad(0)),
+        Fish = {
+            -- Epic
+            ["Glorbo Fruttodrillo"] = 0.33,
+            ["Pipi Kiwi"] = 0.28,
+
+            -- Legendary
+            ["Girafa Celeste"] = 0.20,
+            ["Bombombini Gusin"] = 0.07,
+            ["Bombardiro Crocodilo"] = 0.06,
+            ["Madudungdung"] = 0.06,
+        },
+        ProductId = 3389821746,
+    },
 }
 
 local function IsClose(a, b, eps)

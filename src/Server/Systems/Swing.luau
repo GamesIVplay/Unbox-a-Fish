@@ -15,9 +15,6 @@ local Impact_Sound = World_Sounds:WaitForChild("Impact") :: Sound
 
 local Network = require(ServerScriptService.Network)
 
-local Jecs = require(ReplicatedStorage.Packages.Jecs)
-local Pair = Jecs.pair
-
 local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
 local Swing_Rate_Limit = Ratelimit(1, 0.2)
 
@@ -34,18 +31,18 @@ return {
     name = script.Name,
     phase = Phases.Runservice.Update,
     system = function()
-        for _, Player: Player, Crate_Entity: Types.Entity? in Network.Requests.Swing.Iter() do
-            if not Swing_Rate_Limit(Player) then
+        for _, Swinger_Player: Player, Crate_Entity: Types.Entity? in Network.Requests.Swing.Iter() do
+            if not Swing_Rate_Limit(Swinger_Player) then
                 continue
             end
 
-            local Player_Entity = Registry.Get("Players", Player)
+            local Swinger_Player_Entity = Registry.Get("Players", Swinger_Player)
 
-            if not Player_Entity then
+            if not Swinger_Player_Entity then
                 continue
             end
 
-            local Character = World:get(Player_Entity, Components.Renderable) :: Model?
+            local Character = World:get(Swinger_Player_Entity, Components.Renderable) :: Model?
 
             if not Character then
                 continue
@@ -62,17 +59,11 @@ return {
             S_Sound.Parent = RootPart
             S_Sound:Destroy()
 
-            local Plot_Entity = World:target(Player_Entity, Components.Relationships.Plot)
-
-            if not Plot_Entity then
-                continue
-            end
-
-            if not Crate_Entity or not World:contains(Crate_Entity) then
-                continue
-            end
-
-            if not World:has(Plot_Entity, Pair(Components.Relationships.Crate, Crate_Entity)) then
+            if
+                not Crate_Entity
+                or not World:contains(Crate_Entity)
+                or not World:has(Crate_Entity, Components.Tags.Crate)
+            then
                 continue
             end
 
@@ -82,13 +73,51 @@ return {
                 continue
             end
 
-            local Tutorial_Step = World:get(Player_Entity, Components.Tutorial_Step)
+            local Swinger_Plot_Entity = World:target(Swinger_Player_Entity, Components.Relationships.Plot)
 
-            if Tutorial_Step ~= 0 and Tutorial_Step ~= 6 and not (Tutorial_Step > 9) then
-                Network.Notification.Fire(Player, {
-                    Text = "Complete the tutorial first",
-                })
+            if not Swinger_Plot_Entity then
                 continue
+            end
+
+            local Crate_Plot_Entity = World:target(Crate_Entity, Components.Relationships.Owner)
+            local Crate_Owner_Entity = World:target(Crate_Plot_Entity, Components.Relationships.Owner)
+
+            if not Crate_Owner_Entity then
+                continue
+            end
+
+            local Swinger_Tutorial_Step = World:get(Swinger_Player_Entity, Components.Tutorial_Step)
+
+            local Crate_Owner_Tutorial_Step = World:get(Crate_Owner_Entity, Components.Tutorial_Step)
+
+            local Owns = Crate_Plot_Entity == Swinger_Plot_Entity
+
+            if Owns then
+                if
+                    Crate_Owner_Tutorial_Step ~= 0
+                    and Crate_Owner_Tutorial_Step ~= 6
+                    and not (Crate_Owner_Tutorial_Step > 9)
+                then
+                    Network.Notification.Fire(Swinger_Player, {
+                        Text = "Complete the tutorial first",
+                    })
+
+                    continue
+                end
+            else
+                if not (Swinger_Tutorial_Step > 9) then
+                    Network.Notification.Fire(Swinger_Player, {
+                        Text = "Complete the tutorial first",
+                    })
+                    continue
+                end
+
+                if not (Crate_Owner_Tutorial_Step > 9) then
+                    Network.Notification.Fire(Swinger_Player, {
+                        Text = "This player is in the tutorial",
+                    })
+                    continue
+                end
             end
 
             local Crate_Model = World:get(Crate_Entity, Components.Renderable) :: Model
@@ -104,10 +133,14 @@ return {
 
             Debris:AddItem(Highlight, 0.15)
 
-            local Tool_Level = World:get(Player_Entity, Components.Tool_Level)
+            local Tool_Level = World:get(Swinger_Player_Entity, Components.Tool_Level)
             local Hammer_Data = Hammers[Tool_Level]
 
-            local New_Crate_Health = math.max(Crate_Health - Hammer_Data.Damage, 0)
+            local Damage = Owns and Hammer_Data.Damage or Hammer_Data.Damage / 2
+
+            Damage = math.max(math.round(Damage), 1)
+
+            local New_Crate_Health = math.max(Crate_Health - Damage, 0)
 
             World:set(Crate_Entity, Components.Health, New_Crate_Health)
 

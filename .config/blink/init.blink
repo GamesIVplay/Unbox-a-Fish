@@ -57,6 +57,8 @@ event OpenTrapEffect {
         Owner: f64,
         Crate: string,
         CF: CFrame,
+        MutationMultiplier: f64,
+        GuranteeMutation: boolean,
         Result: struct {
             Name: string,
             Mutation: Types.Mutation?
@@ -154,6 +156,13 @@ scope Requests {
        From: Client,
        Type: Reliable,
        Call: SingleSync
+    }
+
+    event Gift {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync,
+       Data: Types.Entity
     }
 }
 

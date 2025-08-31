@@ -31,7 +31,7 @@ local function Roll_Crate(LuckMultiplier: number)
     local Total = 0
     local Adjusted = {}
 
-    print("Adjusted crate drop chances (%):")
+    -- print("Adjusted crate drop chances (%):")
 
     for Name, Data in Crates do
         -- Rarity bias: bigger boost for rarer crates
@@ -45,11 +45,11 @@ local function Roll_Crate(LuckMultiplier: number)
         Total += Weighted
     end
 
-    -- Print actual % chances
+    --[[ -- Print actual % chances
     for Name, Weight in Adjusted do
         local Percent = (Weight / Total) * 100
         print(string.format("%s: %.4f%%", Name, Percent))
-    end
+    end]]
 
     -- Roll
     local Roll = math.random() * Total
@@ -102,7 +102,7 @@ return {
                 Luck_Multiplier *= 6
 
                 Network.Notification.Fire(Owner_Player, {
-                    Text = "🍀 Pity Boost! 🍀"
+                    Text = "🍀 Pity Boost! 🍀",
                 })
             end
 
@@ -130,6 +130,7 @@ return {
             local Crate_Model = Crate_Data.Model:Clone()
             Crate_Model:PivotTo(Crate_Stand:GetPivot())
             Crate_Model:SetAttribute("Owner", Owner_Player.UserId)
+            Crate_Model:AddTag("Crate")
 
             Crate_Model.Parent = Crates_Folder
 
