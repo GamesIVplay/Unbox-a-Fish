@@ -174,8 +174,8 @@ export type Types_Cash = number
 export type Types_ToolLevel = number
 export type Types_LuckLevel = number
 export type Types_TutorialStep = number
-export type Types_Mutation = ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")
-export type Types_Index = {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}
+export type Types_Mutation = ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")
+export type Types_Index = {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}
 export type Types_Stock = {[string]: number}
 export type Types_Rarity = ("Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret")
 export type Types_FriendBoost = number
@@ -232,7 +232,7 @@ local function ReadEVENT_AddOwnedHighlight(): (Model)
 	return Value
 end
 
-local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
+local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
 	-- Read BLOCK: 46 bytes
 	local BLOCK_START = Read(46)
 	local Value = {} :: any
@@ -266,7 +266,11 @@ local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: 
 		elseif Index == 3 then
 			Value.Result.Mutation = "Rainbow"
 		elseif Index == 4 then
-			Value.Result.Mutation = "Huge"
+			Value.Result.Mutation = "Shocked"
+		elseif Index == 5 then
+			Value.Result.Mutation = "Candy"
+		elseif Index == 6 then
+			Value.Result.Mutation = "BloodMoon"
 		else
 			error(`Unexpected enum: {Index}`)
 		end
@@ -410,7 +414,7 @@ local function PlayerChanges_ReadEVENT_AutoSwingLevel(): (number)
 	return Value
 end
 
-local function PlayerChanges_ReadEVENT_Index(): ({[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+local function PlayerChanges_ReadEVENT_Index(): ({[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }})
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
 	local Value = {}
@@ -428,7 +432,11 @@ local function PlayerChanges_ReadEVENT_Index(): ({[("Normal" | "Gold" | "Diamond
 		elseif Index == 3 then
 			Key_1 = "Rainbow"
 		elseif Index == 4 then
-			Key_1 = "Huge"
+			Key_1 = "Shocked"
+		elseif Index == 5 then
+			Key_1 = "Candy"
+		elseif Index == 6 then
+			Key_1 = "BloodMoon"
 		else
 			error(`Unexpected enum: {Index}`)
 		end
@@ -895,10 +903,10 @@ local Returns = table.freeze({
 		end
 	},
 	OpenTrapEffect = {
-		Iter = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
+		Iter = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
 			local index = 0
 			local queue = Queue.Reliable[6]
-			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
+			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
 				index += 1
 				local arguments = Pop(queue)
 				if arguments ~= nil then
@@ -908,10 +916,10 @@ local Returns = table.freeze({
 			end
 		end,
 		--- @deprecated v0.14.1 -- Use `Iter` instead.
-		Next = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
+		Next = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
 			local index = 0
 			local queue = Queue.Reliable[6]
-			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } })
+			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
 				index += 1
 				local arguments = Pop(queue)
 				if arguments ~= nil then
@@ -1152,10 +1160,10 @@ local Returns = table.freeze({
 			end
 		},
 		Index = {
-			Iter = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+			Iter = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }})
 				local index = 0
 				local queue = Queue.Reliable[26]
-				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }})
 					index += 1
 					local arguments = Pop(queue)
 					if arguments ~= nil then
@@ -1165,10 +1173,10 @@ local Returns = table.freeze({
 				end
 			end,
 			--- @deprecated v0.14.1 -- Use `Iter` instead.
-			Next = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+			Next = function(): () -> (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }})
 				local index = 0
 				local queue = Queue.Reliable[26]
-				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }})
+				return function (): (number, {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }})
 					index += 1
 					local arguments = Pop(queue)
 					if arguments ~= nil then

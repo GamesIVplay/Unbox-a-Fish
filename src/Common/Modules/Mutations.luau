@@ -6,6 +6,7 @@ export type Mutation = {
 }
 
 local Mutations: { [Types.Mutation]: Mutation } = {
+    -- Regular Mutations
     ["Gold"] = {
         Chance = 0.05,
         Multiplier = 2,
@@ -18,6 +19,21 @@ local Mutations: { [Types.Mutation]: Mutation } = {
         Chance = 0.01,
         Multiplier = 10,
     },
+
+    -- Event Mutations
+    ["Shocked"] = {
+        Chance = 0, 
+        Multiplier = 1
+    },
+    ["Candy"] = {
+        Chance = 0,
+        Multiplier = 1
+    },
+    ["BloodMoon"] = {
+        Chance = 0, 
+        Multiplier = 3
+    }
+    
 }
 
 return table.freeze(Mutations)

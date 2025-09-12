@@ -170,8 +170,8 @@ export type Types_Cash = number
 export type Types_ToolLevel = number
 export type Types_LuckLevel = number
 export type Types_TutorialStep = number
-export type Types_Mutation = ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")
-export type Types_Index = {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}
+export type Types_Mutation = ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")
+export type Types_Index = {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}
 export type Types_Stock = {[string]: number}
 export type Types_Rarity = ("Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret")
 export type Types_FriendBoost = number
@@ -231,7 +231,7 @@ local function WriteEVENT_AddOwnedHighlight(Value: Model): ()
 	table.insert(SendInstances, Value or Null)
 end
 
-local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
 	-- Allocate BLOCK: 47 bytes
 	local BLOCK_START = Allocate(47)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
@@ -266,10 +266,14 @@ local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, 
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, 2)
 		elseif Value.Result.Mutation == "Rainbow" then
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, 3)
-		elseif Value.Result.Mutation == "Huge" then
+		elseif Value.Result.Mutation == "Shocked" then
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, 4)
+		elseif Value.Result.Mutation == "Candy" then
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, 5)
+		elseif Value.Result.Mutation == "BloodMoon" then
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
 		else
-			error(`Unexpected enum: {Value.Result.Mutation}, expected one of "Normal" or "Gold" or "Diamond" or "Rainbow" or "Huge".`)
+			error(`Unexpected enum: {Value.Result.Mutation}, expected one of "Normal" or "Gold" or "Diamond" or "Rainbow" or "Shocked" or "Candy" or "BloodMoon".`)
 		end
 	end
 end
@@ -396,7 +400,7 @@ local function PlayerChanges_WriteEVENT_AutoSwingLevel(Value: number): ()
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
 end
 
-local function PlayerChanges_WriteEVENT_Index(Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
+local function PlayerChanges_WriteEVENT_Index(Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 26)
@@ -412,10 +416,14 @@ local function PlayerChanges_WriteEVENT_Index(Value: {[("Normal" | "Gold" | "Dia
 			buffer.writeu8(SendBuffer, OFFSET_0, 2)
 		elseif Key_1 == "Rainbow" then
 			buffer.writeu8(SendBuffer, OFFSET_0, 3)
-		elseif Key_1 == "Huge" then
+		elseif Key_1 == "Shocked" then
 			buffer.writeu8(SendBuffer, OFFSET_0, 4)
+		elseif Key_1 == "Candy" then
+			buffer.writeu8(SendBuffer, OFFSET_0, 5)
+		elseif Key_1 == "BloodMoon" then
+			buffer.writeu8(SendBuffer, OFFSET_0, 6)
 		else
-			error(`Unexpected enum: {Key_1}, expected one of "Normal" or "Gold" or "Diamond" or "Rainbow" or "Huge".`)
+			error(`Unexpected enum: {Key_1}, expected one of "Normal" or "Gold" or "Diamond" or "Rainbow" or "Shocked" or "Candy" or "BloodMoon".`)
 		end
 		-- START ARRAY
 		local OFFSET_1 = Allocate(2)
@@ -1056,12 +1064,12 @@ local Returns = table.freeze({
 		end,
 	},
 	OpenTrapEffect = {
-		Fire = function(Player: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		Fire = function(Player: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_OpenTrapEffect(Value)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		FireAll = function(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1073,7 +1081,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		FireList = function(List: {Player}, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1085,7 +1093,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")? } }): ()
+		FireExcept = function(Except: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1732,12 +1740,12 @@ local Returns = table.freeze({
 			end,
 		},
 		Index = {
-			Fire = function(Player: Player, Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
+			Fire = function(Player: Player, Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}): ()
 				Load(PlayersMap[Player])
 				PlayerChanges_WriteEVENT_Index(Value)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
+			FireAll = function(Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}): ()
 				Load()
 				PlayerChanges_WriteEVENT_Index(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1749,7 +1757,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
+			FireList = function(List: {Player}, Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}): ()
 				Load()
 				PlayerChanges_WriteEVENT_Index(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1761,7 +1769,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Huge")]: { string }}): ()
+			FireExcept = function(Except: Player, Value: {[("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")]: { string }}): ()
 				Load()
 				PlayerChanges_WriteEVENT_Index(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances

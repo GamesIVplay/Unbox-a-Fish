@@ -5,7 +5,7 @@ type ToolLevel = u16
 type LuckLevel = u16
 type TutorialStep = u8
 
-enum Mutation = {Normal, Gold, Diamond, Rainbow, Huge}
+enum Mutation = {Normal, Gold, Diamond, Rainbow, Shocked, Candy, BloodMoon}
 map Index = { [Mutation]: string[] }
 map Stock = { [string]: f64 }
 

@@ -10,6 +10,10 @@ local function Roll_Fish(Crate: string)
     local Cumulative = 0
 
     for Name, Chance in Crate_Data.Fish do
+        if Chance == 0 then
+            continue
+        end
+
         Cumulative += Chance
         if Roll <= Cumulative then
             return Name
@@ -29,6 +33,10 @@ local function Roll_Mutation(Mutation_Multiplier: number?, Guarantee_Mutation: b
         local roll = math.random()
         local cumulative = 0
         for Mutation_Name, Data in Mutations do
+            if Data.Chance == 0 then
+                continue
+            end
+
             cumulative += Data.Chance / total
             if roll <= cumulative then
                 return Mutation_Name
@@ -36,6 +44,10 @@ local function Roll_Mutation(Mutation_Multiplier: number?, Guarantee_Mutation: b
         end
     else
         for Mutation_Name, Data in Mutations do
+            if Data.Chance == 0 then
+                continue
+            end
+            
             local Chance = Data.Chance
             if Mutation_Multiplier then
                 Chance *= Mutation_Multiplier

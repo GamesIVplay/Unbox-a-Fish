@@ -34,6 +34,10 @@ local function Roll_Crate(LuckMultiplier: number)
     -- print("Adjusted crate drop chances (%):")
 
     for Name, Data in Crates do
+        if Data.Chance == 0 then
+            continue
+        end
+        
         -- Rarity bias: bigger boost for rarer crates
         local RarityBias = math.pow(1 - Data.Chance, 10) -- cube exaggerates difference
         -- Apply luck: scale tiny chances more noticeably

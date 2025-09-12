@@ -4,7 +4,7 @@ export type World = typeof(Jecs.world())
 export type Entity = Jecs.Entity
 export type Id<T> = Jecs.Id<T>
 
-export type Mutation = "Gold" | "Diamond" | "Huge" | "Rainbow"
+export type Mutation = "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon"
 
 export type SerializedFish = {
     Name: string,
