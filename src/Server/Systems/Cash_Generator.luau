@@ -6,6 +6,7 @@ local UIGradients = Assets:WaitForChild("UIGradients")
 
 local Billboards = Assets:WaitForChild("Billboards")
 local Fish_Overhead = Billboards:WaitForChild("Fish_Overhead") :: BillboardGui
+local Collect_Overhead = Billboards:WaitForChild("Collect_Overhead") :: BillboardGui
 
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
@@ -24,6 +25,7 @@ local Can_Generate = Ratelimit(1, 1)
 local Fish_Query = World:query(
     Components.Name,
     Components.Renderable,
+    Components.Stand,
     Components.Cash,
     Pair(Components.Relationships.Offline, Components.Cash)
 )
@@ -34,7 +36,9 @@ return {
     name = script.Name,
     phase = Phases.Runservice.Update,
     system = function()
-        for Fish_Entity, Fish_Name: string, Fish_Model: Model, Cash: number, Offline_Cash: number in Fish_Query:iter() do
+        for Fish_Entity, Fish_Name: string, Fish_Model: Model, Stand_Model: Model, Cash: number, Offline_Cash: number in
+            Fish_Query:iter()
+        do
             local Owner_Entity = World:target(Fish_Entity, Components.Relationships.Owner)
 
             local FriendBoost = World:get(Owner_Entity, Components.FriendBoost)
@@ -72,6 +76,29 @@ return {
                 Overhead = Fish_Overhead:Clone()
 
                 Overhead.Parent = Overhead_Attachment
+            end
+
+            local Collect_Model = Stand_Model:FindFirstChild("Collect") :: Model
+            local Touch_Part = Collect_Model:FindFirstChild("Touch") :: Part
+
+            local Touch_Overhead = Touch_Part:FindFirstChild("Collect_Overhead")
+
+            if not Touch_Overhead then
+                Touch_Overhead = Collect_Overhead:Clone()
+
+                Touch_Overhead.Parent = Touch_Part
+            end
+
+            local Cash_Text_Label = Touch_Overhead:FindFirstChild("Cash") :: TextLabel
+            local Offline_Cash_Text_Label = Touch_Overhead:FindFirstChild("OfflineCash") :: TextLabel
+
+            Cash_Text_Label.Text = `${Util.Format_Number_With_Commas(NewCash)}`
+            Offline_Cash_Text_Label.Text = `(Offline Cash: ${Util.Format_Number_With_Commas(Offline_Cash)})`
+
+            if Offline_Cash > 0 then
+                Offline_Cash_Text_Label.Visible = true
+            else
+                Offline_Cash_Text_Label.Visible = false
             end
 
             local Mutation_Text_Label = Overhead:FindFirstChild("Mutation") :: TextLabel

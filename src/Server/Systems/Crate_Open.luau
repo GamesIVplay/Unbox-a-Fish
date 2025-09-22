@@ -29,6 +29,7 @@ local Phases = require(ReplicatedStorage.Common.Phases)
 local World = require(ReplicatedStorage.Common.World)
 
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
+local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 
 local Roll_Fish = require(ReplicatedStorage.Common.Modules.Roll_Fish)
 
@@ -54,6 +55,7 @@ return {
                 continue
             end
 
+            local Inventory = World:get(Plot_Owner, Components.Inventory)
             local Tutorial_Step = World:get(Plot_Owner, Components.Tutorial_Step)
 
             if Tutorial_Step == 0 then
@@ -108,6 +110,13 @@ return {
                 Fish_Mutation = nil
             end
 
+            local Rolled_Fish_Data = Fish[Fish_Name]
+            local Rolled_Fish_Income_Per_Sec = Rolled_Fish_Data.IncomePerSec
+
+            if Fish_Mutation then
+                Rolled_Fish_Income_Per_Sec *= Mutations[Fish_Mutation].Multiplier
+            end
+
             Network.OpenTrapEffect.FireAll({
                 Crate = Crate_Name,
                 CF = Crate_Model:GetPivot(),
@@ -121,7 +130,7 @@ return {
             })
 
             task.delay(8.5, function()
-                if not World:contains(Crate_Entity) then
+                if not World:contains(Crate_Entity) or not World:contains(Plot_Owner) then
                     return
                 end
 
@@ -149,6 +158,62 @@ return {
 
                     Open_Stand = Stand_Model
                     break
+                end
+
+                if not Open_Stand then
+                    local Fish_To_Replace_Entity
+                    local Fish_To_Replace_Name
+                    local Fish_To_Replace_Mutation
+                    local Stand_To_Replace
+                    local Lowest_Income_Per_Sec = math.huge -- start very high
+
+                    for Fish_Entity, Fish_Name: string, Stand: Model in
+                        World:query(Components.Name, Components.Stand)
+                            :with(Pair(Components.Relationships.Owner, Plot_Owner))
+                    do
+                        local Mutation = World:get(Fish_Entity, Components.Mutation)
+
+                        local Fish_Data = Fish[Fish_Name]
+                        local IncomePerSec = Fish_Data.IncomePerSec
+
+                        if Mutation then
+                            IncomePerSec *= Mutations[Mutation].Multiplier
+                        end
+
+                        -- Track the lowest income/sec fish
+                        if IncomePerSec < Lowest_Income_Per_Sec then
+                            Fish_To_Replace_Entity = Fish_Entity
+                            Fish_To_Replace_Name = Fish_Name
+                            Fish_To_Replace_Mutation = Mutation or "Normal"
+                            Lowest_Income_Per_Sec = IncomePerSec
+                            Stand_To_Replace = Stand
+                        end
+                    end
+
+                    if Rolled_Fish_Income_Per_Sec > Lowest_Income_Per_Sec then
+                        World:delete(Fish_To_Replace_Entity)
+
+                        Open_Stand = Stand_To_Replace
+
+                        if not Inventory[Fish_To_Replace_Mutation] then
+                            Inventory[Fish_To_Replace_Mutation] = {}
+                        end
+
+                        if not Inventory[Fish_To_Replace_Mutation][Fish_To_Replace_Name] then
+                            Inventory[Fish_To_Replace_Mutation][Fish_To_Replace_Name] = 1
+                        else
+                            Inventory[Fish_To_Replace_Mutation][Fish_To_Replace_Name] += 1
+                        end
+
+                        local Mutation_Text = Fish_To_Replace_Mutation ~= "Normal" and (Fish_To_Replace_Mutation .. " ")
+                            or ""
+
+                        Network.Notification.Fire(Plot_Owner_Player, {
+                            Text = `{Mutation_Text}{Fish_To_Replace_Name} was moved to inventory`,
+                        })
+
+                        World:set(Plot_Owner, Components.Inventory, Inventory)
+                    end
                 end
 
                 local Fish_Data = Fish[Fish_Name]
@@ -210,8 +275,6 @@ return {
                         Open_Stand:SetAttribute("ServerEntity", nil)
                     end)
                 else
-                    local Inventory = World:get(Plot_Owner, Components.Inventory)
-
                     Fish_Mutation = Fish_Mutation or "Normal"
 
                     if not Inventory[Fish_Mutation] then
@@ -223,6 +286,8 @@ return {
                     else
                         Inventory[Fish_Mutation][Fish_Name] += 1
                     end
+
+                    World:set(Plot_Owner, Components.Inventory, Inventory)
 
                     local Mutation_Text = Fish_Mutation ~= "Normal" and (Fish_Mutation .. " ") or ""
 
