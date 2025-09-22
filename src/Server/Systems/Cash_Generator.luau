@@ -89,10 +89,6 @@ return {
                 Mutation_Text_Label.Visible = false
             end
 
-            local Cash_Text_Label = Overhead:FindFirstChild("Cash") :: TextLabel
-            Cash_Text_Label = Cash_Text_Label:FindFirstChildOfClass("TextLabel")
-            Cash_Text_Label.Text = `${Util.Format_Number_With_Commas(NewCash)}`
-
             local Rarity_Text_Label = Overhead:FindFirstChild("Rarity") :: TextLabel
             Rarity_Text_Label.Text = Fish_Data.Rarity
 
@@ -102,18 +98,13 @@ return {
                 RarityGradient:Clone().Parent = Rarity_Text_Label
             end
 
-            local Offline_Cash_Text_Label = Overhead:FindFirstChild("OfflineCash") :: TextLabel
-            Offline_Cash_Text_Label.Text = `(Offline cash: ${Util.Format_Number_With_Commas(Offline_Cash)})`
-
-            if Offline_Cash > 0 then
-                Offline_Cash_Text_Label.Visible = true
-            else
-                Offline_Cash_Text_Label.Visible = false
-            end
-
             local Title_Text_Label = Overhead:FindFirstChild("Title") :: TextLabel
 
-            Title_Text_Label.Text = `{Fish_Name} (${Util.Format_Number_With_Commas(IncomePerSec)}/s)`
+            Title_Text_Label.Text = `{Fish_Name}` --(${Util.Format_Number_With_Commas(IncomePerSec)}/s)`
+
+            local Income_Per_Sec_Text_Label = Overhead:FindFirstChild("IncomePerSec") :: TextLabel
+
+            Income_Per_Sec_Text_Label.Text = `${Util.Format_Number_With_Commas(IncomePerSec)}/s`
 
             World:set(Fish_Entity, Components.Cash, NewCash)
         end
