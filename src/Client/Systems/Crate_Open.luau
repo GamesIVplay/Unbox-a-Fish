@@ -36,6 +36,7 @@ local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local Roll_Fish = require(ReplicatedStorage.Common.Modules.Roll_Fish)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
+local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 
 -- Configurable tunables
 local BASE_CYCLE_DURATION = 4 -- total cycle time (seconds)
@@ -102,13 +103,10 @@ return {
                     local Overhead_Attachment = Model:FindFirstChild("Overhead_Attachment", true)
 
                     local Overhead = Fish_Overhead:Clone()
-                    local Cash = Overhead:FindFirstChild("Cash") :: TextLabel
                     local Mutation = Overhead:FindFirstChild("Mutation") :: TextLabel
-                    local OfflineCash = Overhead:FindFirstChild("OfflineCash") :: TextLabel
+                    local IncomePerSec = Overhead:FindFirstChild("IncomePerSec") :: TextLabel
                     local Rarity = Overhead:FindFirstChild("Rarity") :: TextLabel
                     local Title = Overhead:FindFirstChild("Title") :: TextLabel
-
-                    Cash.Visible = false
 
                     if Fish_Mutation then
                         Mutation.Text = Fish_Mutation
@@ -120,13 +118,21 @@ return {
                         Mutation.Visible = false
                     end
 
-                    OfflineCash.Visible = false
-
                     Rarity.Text = Fish_Data.Rarity
 
                     local Gradient = UIGradients:FindFirstChild(Fish_Data.Rarity):Clone()
 
                     Gradient.Parent = Rarity
+
+                    local IncomePerSecValue = Fish_Data.IncomePerSec
+
+                    if Fish_Mutation then
+                        local Mutation_Data = Mutations[Fish_Mutation]
+
+                        IncomePerSecValue *= Mutation_Data.Multiplier
+                    end
+
+                    IncomePerSec.Text = `${Util.Format_Number_With_Commas(IncomePerSecValue)}/s`
 
                     Title.Text = Fish_Name
 
@@ -176,13 +182,10 @@ return {
                     local Overhead_Attachment = Model:FindFirstChild("Overhead_Attachment", true)
 
                     local Overhead = Fish_Overhead:Clone()
-                    local Cash = Overhead:FindFirstChild("Cash") :: TextLabel
                     local Mutation = Overhead:FindFirstChild("Mutation") :: TextLabel
-                    local OfflineCash = Overhead:FindFirstChild("OfflineCash") :: TextLabel
+                    local IncomePerSec = Overhead:FindFirstChild("IncomePerSec") :: TextLabel
                     local Rarity = Overhead:FindFirstChild("Rarity") :: TextLabel
                     local Title = Overhead:FindFirstChild("Title") :: TextLabel
-
-                    Cash.Visible = false
 
                     if Result_Mutation then
                         Mutation.Text = Result_Mutation
@@ -194,13 +197,21 @@ return {
                         Mutation.Visible = false
                     end
 
-                    OfflineCash.Visible = false
-
                     Rarity.Text = Fish_Data.Rarity
 
                     local Gradient = UIGradients:FindFirstChild(Fish_Data.Rarity):Clone()
 
                     Gradient.Parent = Rarity
+
+                   local IncomePerSecValue = Fish_Data.IncomePerSec
+
+                    if Result_Mutation then
+                        local Mutation_Data = Mutations[Result_Mutation]
+
+                        IncomePerSecValue *= Mutation_Data.Multiplier
+                    end
+
+                    IncomePerSec.Text = `${Util.Format_Number_With_Commas(IncomePerSecValue)}/s`
 
                     Title.Text = Result_Name
 

@@ -14,7 +14,6 @@ local World = require(ReplicatedStorage.Common.World)
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
 
-local Abbreviate_Number = require(ReplicatedStorage.Common.Modules.Abbreviate_Number)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
