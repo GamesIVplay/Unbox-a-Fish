@@ -16,6 +16,9 @@ type ProfileData = {
     Inventory: {
         [string]: { [string]: number },
     },
+    Inventory_Sequence: {
+        [number]: string,
+    },
     Crate_Queue: {
         [number]: string,
     },
@@ -32,7 +35,7 @@ type ProfileData = {
     BoughtOneTimeOffer: boolean,
     Double_Luck_Time_Remaining: number,
     Double_Mutation_Time_Remaining: number,
-    Claimed_Group_Rewards: boolean
+    Claimed_Group_Rewards: boolean,
 }
 
 local ProfileStore = require(ReplicatedStorage.Packages.ProfileStore)
@@ -44,6 +47,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Luck_Level = 1,
     Auto_Swing_Level = 1,
     Inventory = {},
+    Inventory_Sequence = {},
     Index = {},
     Crate_Queue = {},
     Fish = {},
@@ -55,7 +59,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     BoughtOneTimeOffer = false,
     Double_Luck_Time_Remaining = 0,
     Double_Mutation_Time_Remaining = 0,
-    Claimed_Group_Rewards = false
+    Claimed_Group_Rewards = false,
 }
 
 local PlayerProfileStore = ProfileStore.New("Main", PLAYER_DATA_TEMPLATE)

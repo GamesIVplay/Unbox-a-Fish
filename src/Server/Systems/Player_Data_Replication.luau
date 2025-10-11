@@ -42,7 +42,7 @@ local function Replicate_Tool_Level(Player: Player, Entity: Types.Entity)
     local Previous_Tool_Level = World:get(Entity, Pair(Components.Relationships.Previous, Components.Tool_Level))
 
     if Tool_Level ~= Previous_Tool_Level then
-        for _, Inst in Player.Backpack:GetChildren() do
+        --[[for _, Inst in Player.Backpack:GetChildren() do
             if Inst:HasTag("Hammer") then
                 Inst:Destroy()
             end
@@ -56,7 +56,7 @@ local function Replicate_Tool_Level(Player: Player, Entity: Types.Entity)
 
         local Hammer = Hammers[Tool_Level].Model:Clone()
         Hammer:AddTag("Hammer")
-        Hammer.Parent = Player.Backpack
+        Hammer.Parent = Player.Backpack]]
 
         Network.PlayerChanges.ToolLevel.Fire(Player, Tool_Level)
 
@@ -66,7 +66,7 @@ local function Replicate_Tool_Level(Player: Player, Entity: Types.Entity)
     end
 end
 
-local function Replicate_Inventory(Player: Player, Entity: Types.Entity)
+--[[local function Replicate_Inventory(Player: Player, Entity: Types.Entity)
     local Character = World:get(Entity, Components.Renderable)
 
     if not Character then
@@ -154,7 +154,7 @@ local function Replicate_Inventory(Player: Player, Entity: Types.Entity)
             Util.CopyTable(Inventory, true)
         )
     end
-end
+end]]
 
 local function Replicate_Luck_Level(Player: Player, Entity: Types.Entity)
     local Luck_Level = World:get(Entity, Components.Luck_Level)
@@ -288,8 +288,6 @@ return {
             Replicate_Cash(Player, Entity)
 
             Replicate_Tool_Level(Player, Entity)
-
-            Replicate_Inventory(Player, Entity)
 
             Replicate_Luck_Level(Player, Entity)
 
