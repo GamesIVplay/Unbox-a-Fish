@@ -81,6 +81,20 @@ event EndDialouge {
 }
 
 scope Requests {
+    event Swap {
+        From: Client, 
+        Type: Reliable,
+        Call: SingleSync,
+        Data: u8     
+    }
+
+    event EquipSlot {
+        From: Client, 
+        Type: Reliable,
+        Call: SingleSync,
+        Data: u8 
+    }
+
     event UpgradeTool {
        From: Client,
        Type: Reliable,
@@ -242,5 +256,19 @@ scope PlayerChanges {
         Type: Reliable,
         Call: SingleSync,
         Data: boolean
+    }
+
+    event Inventory {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: Types.Inventory 
+    }
+
+    event EquippedSlot {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: u8 
     }
 }

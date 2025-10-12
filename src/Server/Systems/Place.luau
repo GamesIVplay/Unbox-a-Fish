@@ -13,6 +13,8 @@ local Crate_Spawn_Sound = World_Sounds:WaitForChild("CrateSpawn") :: Sound
 
 local Fish_Sounds = Sounds:WaitForChild("Fish")
 
+local Types = require(ReplicatedStorage.Common.Types)
+
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
 
@@ -23,6 +25,8 @@ local GamepassIds = require(ReplicatedStorage.Common.Modules.GamepassIds)
 
 local Network = require(ServerScriptService.Network)
 
+local Remove_Fish = require(ServerScriptService.Server.Modules.Remove_Fish)
+
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
@@ -30,7 +34,6 @@ local World = require(ReplicatedStorage.Common.World)
 
 local Colors = require(ReplicatedStorage.Common.Modules.Colors)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
-local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 
 return {
     name = script.Name,
@@ -89,32 +92,17 @@ return {
                 end
             end
 
+            local Equipped_Slot = World:get(Player_Entity, Components.Equipped_Slot)
+            local Inventory = World:get(Player_Entity, Components.Inventory)
+
+            local Equipped_Item = Inventory[Equipped_Slot]
+
             local Held_Fish_Name: string?
-            local Held_Fish_Mutation: string?
+            local Held_Fish_Mutation: Types.Mutation?
 
-            for _, Tool in Character:GetChildren() do
-                if Tool:IsA("Tool") and Tool:HasTag("Item") then
-                    local Name = Tool.Name
-
-                    -- Extract count if formatted like "Name [x3]"
-                    local BaseName = Name:match("^(.*)%s%[x(%d+)%]$")
-                    if BaseName then
-                        Name = BaseName
-                    end
-
-                    -- Extract mutation + item name
-                    local FirstWord, Rest = Name:match("^(%S+)%s+(.*)$")
-
-                    if FirstWord and Mutations[FirstWord] then
-                        Held_Fish_Mutation = FirstWord
-                        Held_Fish_Name = Rest
-                    else
-                        Held_Fish_Name = Name
-                        Held_Fish_Mutation = "Normal"
-                    end
-
-                    break
-                end
+            if Equipped_Slot ~= 1 and Equipped_Item then
+                Held_Fish_Name = Equipped_Item.Name
+                Held_Fish_Mutation = Equipped_Item.Mutation
             end
 
             if not Held_Fish_Name then
@@ -125,33 +113,7 @@ return {
                 continue
             end
 
-            local Inventory = World:get(Player_Entity, Components.Inventory)
-
-            local Mutation_Table = Inventory[Held_Fish_Mutation]
-
-            if not Mutation_Table then
-                continue
-            end
-
-            local CurrentAmount = Mutation_Table[Held_Fish_Name]
-
-            if not CurrentAmount then
-                continue
-            end
-
-            -- Subtract 1
-            local NewAmount = CurrentAmount - 1
-
-            if NewAmount > 0 then
-                Mutation_Table[Held_Fish_Name] = NewAmount
-            else
-                Mutation_Table[Held_Fish_Name] = nil
-            end
-
-            -- If mutation table is now empty, remove it entirely
-            if next(Mutation_Table) == nil then
-                Inventory[Held_Fish_Mutation] = nil
-            end
+            Remove_Fish(Inventory, Held_Fish_Name, Held_Fish_Mutation)
 
             local Stand = Open_Stand:FindFirstChild("Stand") :: Model
 
@@ -159,7 +121,7 @@ return {
 
             local Fish_Data = Fish[Held_Fish_Name]
 
-            local Fish_Model = Fish_Data.Models[Held_Fish_Mutation]:Clone() :: Model
+            local Fish_Model = Fish_Data.Models[Held_Fish_Mutation or "Normal"]:Clone() :: Model
             Fish_Model.Parent = Fish_Folder
             Fish_Model:PivotTo(Stand:GetPivot())
             local PrimaryPart = Fish_Model.PrimaryPart
@@ -196,7 +158,7 @@ return {
             World:set(Fish_Entity, Components.Cash, 0)
             World:set(Fish_Entity, Pair(Components.Relationships.Offline, Components.Cash), 0)
 
-            if Held_Fish_Mutation ~= "Normal" then
+            if Held_Fish_Mutation ~= nil then
                 World:set(Fish_Entity, Components.Mutation, Held_Fish_Mutation)
             end
 

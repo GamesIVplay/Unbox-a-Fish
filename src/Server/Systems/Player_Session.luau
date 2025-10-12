@@ -96,12 +96,14 @@ local function Handle_New_Players()
             World:set(PlayerEntity, Components.Name, Player.Name)
             World:set(PlayerEntity, Components.Player, Player)
 
+            World:set(PlayerEntity, Components.Equipped_Slot, 0)
             World:set(PlayerEntity, Components.Cash, ProfileData.Cash)
             World:set(PlayerEntity, Components.Tool_Level, ProfileData.Tool_Level)
             World:set(PlayerEntity, Components.Luck_Level, ProfileData.Luck_Level)
             World:set(PlayerEntity, Components.Auto_Swing_Level, ProfileData.Auto_Swing_Level)
             World:set(PlayerEntity, Components.Index, ProfileData.Index)
             World:set(PlayerEntity, Components.Inventory, ProfileData.Inventory)
+
             World:set(PlayerEntity, Components.Crate_Queue, ProfileData.Crate_Queue)
             World:set(PlayerEntity, Components.Stock, ProfileData.Stock)
             World:set(PlayerEntity, Components.Double_Luck_Time_Remaining, ProfileData.Double_Luck_Time_Remaining)
@@ -229,13 +231,12 @@ local function Handle_New_Players()
                 Update_Character_Collision_Groups(Character)
 
                 Character.Parent = Characters
-
-                World:remove(PlayerEntity, Pair(Components.Relationships.Previous, Components.Tool_Level))
-                World:remove(PlayerEntity, Pair(Components.Relationships.Previous, Components.Inventory))
             end)
 
             Player.CharacterRemoving:Connect(function()
                 World:remove(PlayerEntity, Components.Renderable)
+
+                World:set(PlayerEntity, Components.Equipped_Slot, 0)
             end)
 
             for _, Fish_Model: Model in World:query(Components.Renderable):with(Components.Tags.Fish) do

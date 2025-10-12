@@ -13,6 +13,12 @@ export type SerializedFish = {
     Offline_Cash: number,
 }
 
+export type Item = {
+    Name: string,
+    Mutation: Mutation?,
+    Amount: number,
+}
+
 export type Rarity = "Common" | "Rare" | "Epic" | "Legendary" | "Mythic" | "Secret"
 
 export type AnimationInfo = {

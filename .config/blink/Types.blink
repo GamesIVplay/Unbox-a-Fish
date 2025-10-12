@@ -12,3 +12,13 @@ map Stock = { [string]: f64 }
 enum Rarity = {Common, Rare, Epic, Legendary, Mythic, Secret}
 
 type FriendBoost = f16
+
+type Slot = u16
+
+struct Item {
+    Name: string,
+    Mutation: Mutation?,
+    Amount: f64
+}
+
+map Inventory = { [string]: Item }

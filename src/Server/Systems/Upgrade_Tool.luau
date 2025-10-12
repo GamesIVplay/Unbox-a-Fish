@@ -50,6 +50,12 @@ return {
                 continue
             end
 
+            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+            if not Humanoid then
+                continue
+            end
+
             local RootPart = Character:FindFirstChild("HumanoidRootPart") :: Part?
 
             if not RootPart then

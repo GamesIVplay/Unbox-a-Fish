@@ -3,6 +3,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Network = require(ServerScriptService.Network)
 
+local Add_Fish = require(ServerScriptService.Server.Modules.Add_Fish)
+
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
@@ -39,15 +41,7 @@ return {
             local Cash = World:get(Player_Entity, Components.Cash)
             local Inventory = World:get(Player_Entity, Components.Inventory)
 
-            if not Inventory["Gold"] then
-                Inventory["Gold"] = {}
-            end
-
-            if not Inventory["Gold"]["Cappuccino Assassino"] then
-                Inventory["Gold"]["Cappuccino Assassino"] = 1
-            else
-                Inventory["Gold"]["Cappuccino Assassino"] += 1
-            end
+            Add_Fish(Inventory, "Cappuccino Assassino", "Gold")
 
             World:add(Player_Entity, Components.Tags.Claimed_Group_Rewards)
             World:set(Player_Entity, Components.Cash, Cash + 20000)

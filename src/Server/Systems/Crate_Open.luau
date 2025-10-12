@@ -21,6 +21,8 @@ local CrateBreak = VFX:WaitForChild("CrateBreak") :: Attachment
 
 local Network = require(ServerScriptService.Network)
 
+local Add_Fish = require(ServerScriptService.Server.Modules.Add_Fish)
+
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
 
@@ -184,7 +186,7 @@ return {
                         if IncomePerSec < Lowest_Income_Per_Sec then
                             Fish_To_Replace_Entity = Fish_Entity
                             Fish_To_Replace_Name = Fish_Name
-                            Fish_To_Replace_Mutation = Mutation or "Normal"
+                            Fish_To_Replace_Mutation = Mutation
                             Lowest_Income_Per_Sec = IncomePerSec
                             Stand_To_Replace = Stand
                         end
@@ -195,17 +197,9 @@ return {
 
                         Open_Stand = Stand_To_Replace
 
-                        if not Inventory[Fish_To_Replace_Mutation] then
-                            Inventory[Fish_To_Replace_Mutation] = {}
-                        end
+                        Add_Fish(Inventory, Fish_To_Replace_Name, Fish_To_Replace_Mutation)
 
-                        if not Inventory[Fish_To_Replace_Mutation][Fish_To_Replace_Name] then
-                            Inventory[Fish_To_Replace_Mutation][Fish_To_Replace_Name] = 1
-                        else
-                            Inventory[Fish_To_Replace_Mutation][Fish_To_Replace_Name] += 1
-                        end
-
-                        local Mutation_Text = Fish_To_Replace_Mutation ~= "Normal" and (Fish_To_Replace_Mutation .. " ")
+                        local Mutation_Text = Fish_To_Replace_Mutation ~= nil and (Fish_To_Replace_Mutation .. " ")
                             or ""
 
                         Network.Notification.Fire(Plot_Owner_Player, {
@@ -275,21 +269,11 @@ return {
                         Open_Stand:SetAttribute("ServerEntity", nil)
                     end)
                 else
-                    Fish_Mutation = Fish_Mutation or "Normal"
-
-                    if not Inventory[Fish_Mutation] then
-                        Inventory[Fish_Mutation] = {}
-                    end
-
-                    if not Inventory[Fish_Mutation][Fish_Name] then
-                        Inventory[Fish_Mutation][Fish_Name] = 1
-                    else
-                        Inventory[Fish_Mutation][Fish_Name] += 1
-                    end
+                    Add_Fish(Inventory, Fish_Name, Fish_Mutation)
 
                     World:set(Plot_Owner, Components.Inventory, Inventory)
 
-                    local Mutation_Text = Fish_Mutation ~= "Normal" and (Fish_Mutation .. " ") or ""
+                    local Mutation_Text = Fish_Mutation ~= nil and (Fish_Mutation .. " ") or ""
 
                     Network.Notification.Fire(Plot_Owner_Player, {
                         Text = `{Mutation_Text}{Fish_Name} was added to inventory`,

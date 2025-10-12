@@ -14,10 +14,7 @@ type ProfileData = {
         [string]: { string },
     },
     Inventory: {
-        [string]: { [string]: number },
-    },
-    Inventory_Sequence: {
-        [number]: string,
+        [number]: Types.Item,
     },
     Crate_Queue: {
         [number]: string,
@@ -47,7 +44,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Luck_Level = 1,
     Auto_Swing_Level = 1,
     Inventory = {},
-    Inventory_Sequence = {},
+    New_Inventory = {},
     Index = {},
     Crate_Queue = {},
     Fish = {},
@@ -62,7 +59,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Claimed_Group_Rewards = false,
 }
 
-local PlayerProfileStore = ProfileStore.New("Main", PLAYER_DATA_TEMPLATE)
+local PlayerProfileStore = ProfileStore.New("Not_Main", PLAYER_DATA_TEMPLATE)
 
 local Profiles: { [Player]: Profile } = {}
 

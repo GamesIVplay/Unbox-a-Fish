@@ -12,6 +12,9 @@ local GamepassIds = require(ReplicatedStorage.Common.Modules.GamepassIds)
 
 local Network = require(ServerScriptService.Network)
 
+local Add_Fish = require(ServerScriptService.Server.Modules.Add_Fish)
+local Remove_Fish = require(ServerScriptService.Server.Modules.Remove_Fish)
+
 local Components = require(ReplicatedStorage.Common.Components)
 local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
@@ -62,32 +65,17 @@ return {
                 continue
             end
 
+            local Equipped_Slot = World:get(Player_Entity, Components.Equipped_Slot)
+            local Inventory = World:get(Player_Entity, Components.Inventory)
+
+            local Equipped_Item = Inventory[Equipped_Slot]
+
             local Held_Fish_Name: string?
-            local Held_Fish_Mutation: string
+            local Held_Fish_Mutation: Types.Mutation?
 
-            for _, Tool in Character:GetChildren() do
-                if Tool:IsA("Tool") and Tool:HasTag("Item") then
-                    local Name = Tool.Name
-
-                    -- Extract count if formatted like "Name [x3]"
-                    local BaseName = Name:match("^(.*)%s%[x(%d+)%]$")
-                    if BaseName then
-                        Name = BaseName
-                    end
-
-                    -- Extract mutation + item name
-                    local FirstWord, Rest = Name:match("^(%S+)%s+(.*)$")
-
-                    if FirstWord and Mutations[FirstWord] then
-                        Held_Fish_Mutation = FirstWord
-                        Held_Fish_Name = Rest
-                    else
-                        Held_Fish_Name = Name
-                        Held_Fish_Mutation = "Normal"
-                    end
-
-                    break
-                end
+            if Equipped_Slot ~= 1 and Equipped_Item then
+                Held_Fish_Name = Equipped_Item.Name
+                Held_Fish_Mutation = Equipped_Item.Mutation
             end
 
             if not Held_Fish_Name then
@@ -98,27 +86,7 @@ return {
                 continue
             end
 
-            local Inventory = World:get(Player_Entity, Components.Inventory)
-
-            local Mutation_Table = Inventory[Held_Fish_Mutation]
-
-            if not Mutation_Table then
-                continue
-            end
-
-            local CurrentAmount = Mutation_Table[Held_Fish_Name]
-            if not CurrentAmount then
-                continue
-            end
-
-            -- Subtract 1
-            local NewAmount = CurrentAmount - 1
-
-            if NewAmount > 0 then
-                Mutation_Table[Held_Fish_Name] = NewAmount
-            else
-                Mutation_Table[Held_Fish_Name] = nil
-            end
+            Remove_Fish(Inventory, Held_Fish_Name, Held_Fish_Mutation)
 
             local Gifter_Name = World:get(Player_Entity, Components.Name)
             local Receiver_Name = World:get(Target_Player_Entity, Components.Name)
@@ -126,17 +94,9 @@ return {
             local Target_Player_Inventory = World:get(Target_Player_Entity, Components.Inventory)
             local Target_Player = World:get(Target_Player_Entity, Components.Player)
 
-            if not Target_Player_Inventory[Held_Fish_Mutation] then
-                Target_Player_Inventory[Held_Fish_Mutation] = {}
-            end
+            Add_Fish(Target_Player_Inventory, Held_Fish_Name, Held_Fish_Mutation)
 
-            if not Target_Player_Inventory[Held_Fish_Mutation][Held_Fish_Name] then
-                Target_Player_Inventory[Held_Fish_Mutation][Held_Fish_Name] = 1
-            else
-                Target_Player_Inventory[Held_Fish_Mutation][Held_Fish_Name] += 1
-            end
-
-            local Mutation_Text = Held_Fish_Mutation ~= "Normal" and (Held_Fish_Mutation .. " ") or ""
+            local Mutation_Text = Held_Fish_Mutation ~= nil and (Held_Fish_Mutation .. " ") or ""
 
             Network.Notification.Fire(Player, {
                 Text = `Gifted {Receiver_Name} a {Mutation_Text}{Held_Fish_Name}`,

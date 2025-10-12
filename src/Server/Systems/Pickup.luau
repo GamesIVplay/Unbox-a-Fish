@@ -16,6 +16,8 @@ local Pickup_Rate_Limit = Ratelimit(1, 0.5)
 
 local Network = require(ServerScriptService.Network)
 
+local Add_Fish = require(ServerScriptService.Server.Modules.Add_Fish)
+
 local Jecs = require(ReplicatedStorage.Packages.Jecs)
 local Pair = Jecs.pair
 
@@ -63,18 +65,10 @@ return {
             local Inventory = World:get(Player_Entity, Components.Inventory)
 
             local Fish_Name = World:get(ServerEntity, Components.Name)
-            local Fish_Mutation = World:get(ServerEntity, Components.Mutation) or "Normal"
+            local Fish_Mutation = World:get(ServerEntity, Components.Mutation)
             local Fish_Model = World:get(ServerEntity, Components.Renderable)
 
-            if not Inventory[Fish_Mutation] then
-                Inventory[Fish_Mutation] = {}
-            end
-
-            if not Inventory[Fish_Mutation][Fish_Name] then
-                Inventory[Fish_Mutation][Fish_Name] = 1
-            else
-                Inventory[Fish_Mutation][Fish_Name] += 1
-            end
+            Add_Fish(Inventory, Fish_Name, Fish_Mutation)
 
             Network.Notification.Fire(Player, {
                 Text = `Fish picked up`,

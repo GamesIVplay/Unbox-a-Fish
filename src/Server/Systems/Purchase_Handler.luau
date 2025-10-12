@@ -38,6 +38,8 @@ local Colors = require(ReplicatedStorage.Common.Modules.Colors)
 local Crates = require(ReplicatedStorage.Common.Modules.Crates)
 local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
 
+local Add_Fish = require(ServerScriptService.Server.Modules.Add_Fish)
+
 local Types = require(ReplicatedStorage.Common.Types)
 
 local Grant_Purchase_By_Product_Id = {
@@ -75,21 +77,9 @@ local Grant_Purchase_By_Product_Id = {
 
         local Inventory = World:get(Player_Entity, Components.Inventory)
 
-        if not Inventory["Normal"] then
-            Inventory["Normal"] = {}
-        end
+        Add_Fish(Inventory, "Girafa Celeste")
 
-        if not Inventory["Normal"]["Girafa Celeste"] then
-            Inventory["Normal"]["Girafa Celeste"] = 1
-        else
-            Inventory["Normal"]["Girafa Celeste"] += 1
-        end
-
-        if not Inventory["Normal"]["Burbaloni Luliloli"] then
-            Inventory["Normal"]["Burbaloni Luliloli"] = 1
-        else
-            Inventory["Normal"]["Burbaloni Luliloli"] += 1
-        end
+        Add_Fish(Inventory, "Burbaloni Luliloli")
 
         World:add(Player_Entity, Components.Tags.BoughtOneTimeOffer)
 
@@ -104,15 +94,7 @@ local Grant_Purchase_By_Product_Id = {
 
         local Inventory = World:get(Player_Entity, Components.Inventory)
 
-        if not Inventory["Normal"] then
-            Inventory["Normal"] = {}
-        end
-
-        if not Inventory["Normal"]["Chimpanzini Bananini"] then
-            Inventory["Normal"]["Chimpanzini Bananini"] = 1
-        else
-            Inventory["Normal"]["Chimpanzini Bananini"] += 1
-        end
+        Add_Fish(Inventory, "Chimpanzini Bananini")
 
         World:set(Player_Entity, Components.Double_Luck_Time_Remaining, 60 * 10)
         World:set(Player_Entity, Components.Double_Mutation_Time_Remaining, 60 * 10)
@@ -128,15 +110,7 @@ local Grant_Purchase_By_Product_Id = {
 
         local Inventory = World:get(Player_Entity, Components.Inventory)
 
-        if not Inventory["Normal"] then
-            Inventory["Normal"] = {}
-        end
-
-        if not Inventory["Normal"]["Rhino toasterino"] then
-            Inventory["Normal"]["Rhino toasterino"] = 1
-        else
-            Inventory["Normal"]["Rhino toasterino"] += 1
-        end
+        Add_Fish(Inventory, "Rhino toasterino")
 
         World:set(Player_Entity, Components.Double_Luck_Time_Remaining, 60 * 15)
         World:set(Player_Entity, Components.Double_Mutation_Time_Remaining, 60 * 15)
@@ -168,15 +142,7 @@ local Grant_Purchase_By_Product_Id = {
     [ProductIds["Legendary Offer"]] = function(_, Player_Entity: Types.Entity)
         local Inventory = World:get(Player_Entity, Components.Inventory)
 
-        if not Inventory["Normal"] then
-            Inventory["Normal"] = {}
-        end
-
-        if not Inventory["Normal"]["Bombardiro Crocodilo"] then
-            Inventory["Normal"]["Bombardiro Crocodilo"] = 1
-        else
-            Inventory["Normal"]["Bombardiro Crocodilo"] += 1
-        end
+        Add_Fish(Inventory, "Bombardiro Crocodilo")
 
         World:set(Player_Entity, Components.Inventory, Inventory)
 
@@ -185,15 +151,7 @@ local Grant_Purchase_By_Product_Id = {
     [ProductIds["Mythic Offer"]] = function(_, Player_Entity: Types.Entity)
         local Inventory = World:get(Player_Entity, Components.Inventory)
 
-        if not Inventory["Normal"] then
-            Inventory["Normal"] = {}
-        end
-
-        if not Inventory["Normal"]["Tralalero Tralala"] then
-            Inventory["Normal"]["Tralalero Tralala"] = 1
-        else
-            Inventory["Normal"]["Tralalero Tralala"] += 1
-        end
+        Add_Fish(Inventory, "Tralalero Tralala")
 
         World:set(Player_Entity, Components.Inventory, Inventory)
 

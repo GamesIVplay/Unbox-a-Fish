@@ -87,6 +87,10 @@ return {
                 Touch_Overhead = Collect_Overhead:Clone()
 
                 Touch_Overhead.Parent = Touch_Part
+
+                Fish_Model.Destroying:Once(function()
+                    Touch_Overhead:Destroy()
+                end)
             end
 
             local Cash_Text_Label = Touch_Overhead:FindFirstChild("Cash") :: TextLabel

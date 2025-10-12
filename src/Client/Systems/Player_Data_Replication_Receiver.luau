@@ -587,10 +587,13 @@ local function Add_Gift_Prompts(LocalEntity: Types.Entity)
 
     local FoundItem = false
 
-    for _, Inst in LocalCharacter:GetChildren() do
-        if Inst:HasTag("Item") then
-            FoundItem = true
-        end
+    local Equipped_Slot = World:get(LocalEntity, Components.Equipped_Slot)
+    local Inventory = World:get(LocalEntity, Components.Inventory)
+
+    local Equipped_Item = Inventory[Equipped_Slot]
+
+    if Equipped_Slot ~= 1 and Equipped_Item then
+        FoundItem = true
     end
 
     for _, Character: Model in Characters:GetChildren() do
@@ -633,6 +636,28 @@ local function Add_Gift_Prompts(LocalEntity: Types.Entity)
         end
 
         Prompt.Enabled = FoundItem
+    end
+end
+
+local function Handle_Inventory(LocalEntity: Types.Entity)
+    for _, Data in Network.PlayerChanges.Inventory.Iter() do
+        local Converted = {}
+
+        for index, value in Data do
+            Converted[tonumber(index)] = value
+        end
+
+        World:set(LocalEntity, Components.Inventory, Converted)
+
+        Fusion_Values.Inventory:set(Converted)
+    end
+end
+
+local function Handle_Equipped_Slot(LocalEntity: Types.Entity)
+    for _, Data in Network.PlayerChanges.EquippedSlot.Iter() do
+        World:set(LocalEntity, Components.Equipped_Slot, Data)
+
+        Fusion_Values.Equipped_Slot:set(Data)
     end
 end
 
@@ -679,6 +704,10 @@ return {
         Handle_Tool_Rigged_Animation(LocalEntity)
 
         Add_Gift_Prompts(LocalEntity)
+
+        Handle_Inventory(LocalEntity)
+
+        Handle_Equipped_Slot(LocalEntity)
     end,
     runConditions = {},
 }

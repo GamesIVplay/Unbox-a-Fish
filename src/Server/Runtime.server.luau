@@ -22,6 +22,8 @@ Start({
     require(Systems.Skip_Crate),
     require(Systems.Swing),
     require(Systems.Crate_Display),
+    require(Systems.Equip_Slot),
+    require(Systems.Swap),
     require(Systems.Place),
     require(Systems.Crate_Open),
     require(Systems.Cash_Generator),

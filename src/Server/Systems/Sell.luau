@@ -56,32 +56,17 @@ local function Handle_Sell_Single_Requests()
         local Plot_Model = World:get(Plot_Entity, Components.Renderable) :: Model
         local Plot_Spawn = Plot_Model:FindFirstChild("Spawn") :: Part
 
+        local Equipped_Slot = World:get(Player_Entity, Components.Equipped_Slot)
+        local Inventory = World:get(Player_Entity, Components.Inventory)
+
+        local Equipped_Item = Inventory[Equipped_Slot]
+
         local Held_Fish_Name: string?
         local Held_Fish_Mutation: string?
 
-        for _, Tool in Character:GetChildren() do
-            if Tool:IsA("Tool") and Tool:HasTag("Item") then
-                local Name = Tool.Name
-
-                -- Extract count if formatted like "Name [x3]"
-                local BaseName = Name:match("^(.*)%s%[x(%d+)%]$")
-                if BaseName then
-                    Name = BaseName
-                end
-
-                -- Extract mutation + item name
-                local FirstWord, Rest = Name:match("^(%S+)%s+(.*)$")
-
-                if FirstWord and Mutations[FirstWord] then
-                    Held_Fish_Mutation = FirstWord
-                    Held_Fish_Name = Rest
-                else
-                    Held_Fish_Name = Name
-                    Held_Fish_Mutation = "Normal"
-                end
-
-                break
-            end
+        if Equipped_Slot ~= 1 and Equipped_Item then
+            Held_Fish_Name = Equipped_Item.Name
+            Held_Fish_Mutation = Equipped_Item.Mutation or "Normal"
         end
 
         if not Held_Fish_Name then
@@ -121,34 +106,13 @@ local function Handle_Sell_Single_Requests()
             continue
         end
 
-        local Inventory = World:get(Player_Entity, Components.Inventory)
+        Equipped_Item.Amount -= 1
+
+        if Equipped_Item.Amount <= 0 then
+            Inventory[Equipped_Slot] = nil
+        end
+
         local Cash = World:get(Player_Entity, Components.Cash)
-
-        local Mutation_Table = Inventory[Held_Fish_Mutation]
-
-        if not Mutation_Table then
-            continue
-        end
-
-        local CurrentAmount = Mutation_Table[Held_Fish_Name]
-
-        if not CurrentAmount then
-            continue
-        end
-
-        -- Subtract 1
-        local NewAmount = CurrentAmount - 1
-
-        if NewAmount > 0 then
-            Mutation_Table[Held_Fish_Name] = NewAmount
-        else
-            Mutation_Table[Held_Fish_Name] = nil
-        end
-
-        -- If mutation table is now empty, remove it entirely
-        if next(Mutation_Table) == nil then
-            Inventory[Held_Fish_Mutation] = nil
-        end
 
         local Fish_Data = Fish[Held_Fish_Name]
 
@@ -260,25 +224,31 @@ local function Handle_Sell_All_Requests()
 
         local Cash_Earned = 0
 
-        for Fish_Mutation, Fishes in Inventory do
-            for Fish_Name, Fish_Amount in Fishes do
-                local Fish_Data = Fish[Fish_Name]
-
-                local Sell_Price = Fish_Data.Sell_Price
-
-                if Fish_Mutation ~= "Normal" then
-                    local Mutation_Data = Mutations[Fish_Mutation :: any]
-
-                    Sell_Price *= Mutation_Data.Multiplier
-                end
-
-                Sell_Price *= Fish_Amount
-
-                Cash_Earned += Sell_Price
+        for Slot, Item in Inventory do
+            if Slot == 1 then
+                continue
             end
-        end
 
-        table.clear(Inventory)
+            local Fish_Name = Item.Name
+            local Fish_Amount = Item.Amount
+            local Fish_Mutation = Item.Mutation
+
+            local Fish_Data = Fish[Fish_Name]
+
+            local Sell_Price = Fish_Data.Sell_Price
+
+            if Fish_Mutation then
+                local Mutation_Data = Mutations[Fish_Mutation :: any]
+
+                Sell_Price *= Mutation_Data.Multiplier
+            end
+
+            Sell_Price *= Fish_Amount
+
+            Cash_Earned += Sell_Price
+
+            Inventory[Slot] = nil
+        end
 
         World:set(Player_Entity, Components.Inventory, Inventory)
         World:set(Player_Entity, Components.Cash, Cash + Cash_Earned)

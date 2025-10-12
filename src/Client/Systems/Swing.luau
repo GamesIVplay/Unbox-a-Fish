@@ -48,7 +48,6 @@ return {
     phase = Phases.Runservice.Update,
     system = function()
         local Local_Entity = Registry.Get("Players", "Local")
-        local Local_Player = World:get(Local_Entity, Components.Player) :: Player
 
         local Auto_Swing_Level = World:get(Local_Entity, Components.Auto_Swing_Level)
 

@@ -9,6 +9,7 @@ return table.freeze({
     Luck_Level = Scope:Value(1),
     Auto_Swing_Level = Scope:Value(1),
     Index = Scope:Value({}),
+    Inventory = Scope:Value({}),
     Tutorial_Step = Scope:Value(11),
     Friend_Boost = Scope:Value(1),
     Restock_Time = Scope:Value(0),
@@ -16,4 +17,5 @@ return table.freeze({
     Bought_One_Time_Offer = Scope:Value(true),
     Auto_Swing = Scope:Value(false),
     Auto_Swing_Visible = Scope:Value(false),
+    Equipped_Slot = Scope:Value(0),
 })

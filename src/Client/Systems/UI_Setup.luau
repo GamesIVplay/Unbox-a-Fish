@@ -3,6 +3,7 @@ local MarketPlaceService = game:GetService("MarketplaceService")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Debris_Folder = workspace:WaitForChild("Debris")
 
@@ -70,6 +71,7 @@ local Abbreviate_Number = require(ReplicatedStorage.Common.Modules.Abbreviate_Nu
 local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local GamepassIds = require(ReplicatedStorage.Common.Modules.GamepassIds)
+local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
 local StatCalculator = require(ReplicatedStorage.Common.Modules.StatCalculator)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
@@ -204,6 +206,175 @@ local function Hydrate_Button(GuiButton: GuiButton, OnActivate: () -> (), HMulti
     })
 end
 
+local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local HUD = PlayerGui:WaitForChild("HUD") :: ScreenGui
+
+    local Hotbar = HUD:WaitForChild("Hotbar")
+    local Template = Hotbar:WaitForChild("Template")
+
+    for i = 1, 8 do
+        local Slot = Template:Clone()
+        local Title = Slot:WaitForChild("Title") :: TextLabel
+        local UIStroke = Slot:WaitForChild("UIStroke")
+
+        local Number = Slot:WaitForChild("Number") :: TextLabel
+        local Number_UIStroke = Number:WaitForChild("UIStroke") :: UIStroke
+
+        Number.Text = i
+
+        Scope:Hydrate(Number_UIStroke)({
+            Transparency = Scope:Computed(function(Use)
+                if Use(Fusion_Values.Equipped_Slot) == i then
+                    return 0.1
+                else
+                    return 0.6
+                end
+            end),
+        })
+
+        local Item = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Inventory)[i]
+        end)
+
+        Scope:Observer(Item):onBind(function()
+            local Data = Peek(Item)
+
+            local Rarity = Data and Fish[Data.Name] and Fish[Data.Name].Rarity or "Common"
+
+            if i == 1 then
+                Rarity = "Hammer"
+            end
+
+            local Old_Gradient = Slot:FindFirstChildOfClass("UIGradient")
+
+            if Old_Gradient then
+                Old_Gradient:Destroy()
+            end
+
+            UIGradients:FindFirstChild(Rarity):Clone().Parent = Slot
+        end)
+
+        Scope:Observer(Item):onBind(function()
+            local Data = Peek(Item)
+
+            local Old_Gradient = Title:FindFirstChildOfClass("UIGradient")
+
+            if Old_Gradient then
+                Old_Gradient:Destroy()
+            end
+
+            if not Data then
+                return
+            end
+
+            if Data.Mutation then
+                UIGradients:FindFirstChild(Data.Mutation):Clone().Parent = Title
+            end
+        end)
+
+        Scope:Hydrate(Title)({
+            Text = Scope:Computed(function(Use)
+                local Item = Use(Item)
+
+                if not Item then
+                    return ""
+                end
+
+                local Item_Name = Item.Name
+                local Item_Mutation = Item.Mutation
+                local Item_Amount = Item.Amount
+
+                local Mutation_Text = Item_Mutation and Item_Mutation .. " " or ""
+                local Amount_Text = Item_Amount > 1 and ` [x{Item_Amount}]` or ""
+
+                return Item and `{Mutation_Text}{Item_Name}{Amount_Text}` or ""
+            end),
+        })
+
+        Scope:Hydrate(UIStroke)({
+            Transparency = Scope:Computed(function(Use)
+                if Use(Fusion_Values.Equipped_Slot) == i then
+                    return 0.1
+                else
+                    return 0.6
+                end
+            end),
+        })
+
+        Scope:Hydrate(Slot)({
+            BackgroundTransparency = Scope:Computed(function(Use)
+                if Use(Fusion_Values.Equipped_Slot) == i then
+                    return 0.1
+                else
+                    return 0.15
+                end
+            end),
+        })
+
+        local SizeMultiplier = Scope:Value(DEFAULT_SIZE_MULTIPLIER)
+        local Hovering = Scope:Value(false)
+        local SizeMultiplierSpring = Scope:Spring(SizeMultiplier, 17, 0.5)
+
+        Scope:Observer(Hovering):onBind(function()
+            if Peek(Hovering) then
+                SizeMultiplier:set(HOVER_SIZE_MULTIPLIER)
+            else
+                SizeMultiplier:set(DEFAULT_SIZE_MULTIPLIER)
+            end
+        end)
+
+        local function OnActivate()
+            Activate:Play()
+            ActivateHaptic:Play()
+            SizeMultiplierSpring:addVelocity(ACTIVATE_VELOCITY)
+
+            Network.Requests.EquipSlot.Fire(i)
+        end
+
+        Scope:Hydrate(Slot)({
+            [OnEvent("MouseEnter")] = function()
+                Hover:Play()
+                Hovering:set(true)
+            end,
+            [OnEvent("MouseLeave")] = function()
+                Hovering:set(false)
+            end,
+            [OnEvent("Activated")] = function()
+                OnActivate()
+            end,
+            [Children] = {
+                Scope:New("UIScale")({
+                    Scale = SizeMultiplierSpring,
+                }),
+            },
+        })
+
+        UserInputService.InputBegan:Connect(function(Input, Processed)
+            if Processed then
+                return
+            end
+
+            local KeyCodes = {
+                Enum.KeyCode.One,
+                Enum.KeyCode.Two,
+                Enum.KeyCode.Three,
+                Enum.KeyCode.Four,
+                Enum.KeyCode.Five,
+                Enum.KeyCode.Six,
+                Enum.KeyCode.Seven,
+                Enum.KeyCode.Eight,
+            }
+
+            if Input.KeyCode == KeyCodes[i] then
+                OnActivate()
+            end
+        end)
+
+        Slot.Visible = true
+        Slot.Parent = Hotbar
+    end
+end
+
 local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     local HUD = PlayerGui:WaitForChild("HUD") :: ScreenGui
 
@@ -214,7 +385,8 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     local Left = HUD:WaitForChild("Left")
     local Store = Left:WaitForChild("Store") :: ImageButton
-    local Index = Left:WaitForChild("Index")
+    local Index = Left:WaitForChild("Index") :: ImageButton
+    local Items = Left:WaitForChild("Items") :: ImageButton
 
     local Tutorial = HUD:WaitForChild("Tutorial") :: Frame
     local Tutorial_Text_Label = Tutorial:WaitForChild("TextLabel") :: TextLabel
@@ -227,6 +399,8 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     local Right = HUD:WaitForChild("Right")
     local Free_Reward = Right:WaitForChild("FreeReward") :: ImageButton
+
+    Setup_Hotbar(LocalEntity, PlayerGui)
 
     Hydrate_Button(Free_Reward, function()
         if Peek(Fusion_Values.Screen) == "FreeReward" then
@@ -371,6 +545,14 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             return (Use(Fusion_Values.Tutorial_Step) > 9)
         end),
     })
+
+    Hydrate_Button(Items, function()
+        if Peek(Fusion_Values.Screen) == "Items" then
+            Fusion_Values.Screen:set("HUD")
+        else
+            Fusion_Values.Screen:set("Items")
+        end
+    end)
 
     Hydrate_Button(Index, function()
         if Peek(Fusion_Values.Screen) == "Index" then
@@ -535,6 +717,120 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     end
 
     StartScrollLoop()
+end
+
+local function Setup_Items(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local LocalPlayer = World:get(LocalEntity, Components.Player)
+
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+
+    local Items_Panel = Panels:WaitForChild("Items")
+    local Scroll = Items_Panel:WaitForChild("Scroll") :: ScrollingFrame
+    local Close = Items_Panel:WaitForChild("Close") :: ImageButton
+
+    local Template = Scroll:WaitForChild("Template") :: ImageButton
+
+    Scope:Hydrate(Scroll)({
+        [Children] = {
+            Scope:Computed(function(Use, Processor: Fusion.Scope<Fusion.Fusion>)
+                local Inventory = Use(Fusion_Values.Inventory)
+
+                local Slots = {}
+
+                for Slot, Item in Inventory do
+                    if Slot <= 8 then
+                        continue
+                    end
+
+                    local Button = Template:Clone()
+                    local Title = Button:WaitForChild("Title")
+
+                    local Item_Name = Item.Name
+                    local Item_Mutation = Item.Mutation
+                    local Item_Amount = Item.Amount
+
+                    local Fish_Data = Fish[Item_Name]
+
+                    local IncomePerSecValue = Fish_Data.IncomePerSec
+
+                    if Item_Mutation then
+                        local Mutation_Data = Mutations[Item_Mutation]
+
+                        IncomePerSecValue *= Mutation_Data.Multiplier
+                    end
+
+                    Button.LayoutOrder = -IncomePerSecValue
+
+                    local Mutation_Text = Item_Mutation and Item_Mutation .. " " or ""
+                    local Amount_Text = Item_Amount > 1 and ` [x{Item_Amount}]` or ""
+
+                    Title.Text = `{Mutation_Text}{Item_Name}{Amount_Text}`
+
+                    local Rarity = Fish[Item.Name].Rarity
+
+                    UIGradients:FindFirstChild(Rarity):Clone().Parent = Button
+
+                    if Item.Mutation then
+                        UIGradients:FindFirstChild(Item.Mutation):Clone().Parent = Title
+                    end
+
+                    local SizeMultiplier = Scope:Value(DEFAULT_SIZE_MULTIPLIER)
+                    local Hovering = Scope:Value(false)
+                    local SizeMultiplierSpring = Scope:Spring(SizeMultiplier, 17, 0.5)
+
+                    Scope:Observer(Hovering):onBind(function()
+                        if Peek(Hovering) then
+                            SizeMultiplier:set(HOVER_SIZE_MULTIPLIER)
+                        else
+                            SizeMultiplier:set(DEFAULT_SIZE_MULTIPLIER)
+                        end
+                    end)
+
+                    local function OnActivate()
+                        Activate:Play()
+                        ActivateHaptic:Play()
+                        SizeMultiplierSpring:addVelocity(ACTIVATE_VELOCITY)
+
+                        Network.Requests.Swap.Fire(Slot)
+                    end
+
+                    Scope:Hydrate(Button)({
+                        [OnEvent("MouseEnter")] = function()
+                            Hover:Play()
+                            Hovering:set(true)
+                        end,
+                        [OnEvent("MouseLeave")] = function()
+                            Hovering:set(false)
+                        end,
+                        [OnEvent("Activated")] = function()
+                            OnActivate()
+                        end,
+                        [Children] = {
+                            Scope:New("UIScale")({
+                                Scale = SizeMultiplierSpring,
+                            }),
+                        },
+                    })
+
+                    Button.Visible = true
+
+                    table.insert(Slots, Button)
+                end
+
+                return Slots
+            end),
+        },
+    })
+
+    Scope:Hydrate(Items_Panel)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "Items"
+        end),
+    })
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
 end
 
 local function Setup_Store(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
@@ -1283,6 +1579,7 @@ return {
             local PlayerGui = LocalPlayer.PlayerGui
 
             Setup_Hud(LocalEntity, PlayerGui)
+            Setup_Items(LocalEntity, PlayerGui)
             Setup_Store(LocalEntity, PlayerGui)
             Setup_Index(LocalEntity, PlayerGui)
             Setup_Crate_Shop(LocalEntity, PlayerGui)

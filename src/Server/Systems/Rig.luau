@@ -38,32 +38,17 @@ return {
 
             local Rigged_Fish = Character:FindFirstChild("Rigged_Fish") :: Model
 
+            local Equipped_Slot = World:get(Player_Entity, Components.Equipped_Slot)
+            local Inventory = World:get(Player_Entity, Components.Inventory)
+
+            local Equipped_Item = Inventory[Equipped_Slot]
+
             local Held_Fish_Name: string?
             local Held_Fish_Mutation: string?
 
-            for _, Tool in Character:GetChildren() do
-                if Tool:IsA("Tool") and Tool:HasTag("Item") then
-                    local Name = Tool.Name
-
-                    -- Extract count if formatted like "Name [x3]"
-                    local BaseName = Name:match("^(.*)%s%[x(%d+)%]$")
-                    if BaseName then
-                        Name = BaseName
-                    end
-
-                    -- Extract mutation + item name
-                    local FirstWord, Rest = Name:match("^(%S+)%s+(.*)$")
-
-                    if FirstWord and Mutations[FirstWord] then
-                        Held_Fish_Mutation = FirstWord
-                        Held_Fish_Name = Rest
-                    else
-                        Held_Fish_Name = Name
-                        Held_Fish_Mutation = "Normal"
-                    end
-
-                    break
-                end
+            if Equipped_Slot ~= 1 and Equipped_Item then
+                Held_Fish_Name = Equipped_Item.Name
+                Held_Fish_Mutation = Equipped_Item.Mutation or "Normal"
             end
 
             if not Held_Fish_Name then
