@@ -59,6 +59,7 @@ local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_U
 local Crates = require(ReplicatedStorage.Common.Modules.Crates)
 local Hammers = require(ReplicatedStorage.Common.Modules.Hammers)
 local Luck_Prices = require(ReplicatedStorage.Common.Modules.Luck_Prices)
+local Rebirths = require(ReplicatedStorage.Common.Modules.Rebirths)
 
 local Log = require(ReplicatedStorage.Common.Log)
 
@@ -73,6 +74,7 @@ local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local GamepassIds = require(ReplicatedStorage.Common.Modules.GamepassIds)
 local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 local ProductIds = require(ReplicatedStorage.Common.Modules.ProductIds)
+local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
 local StatCalculator = require(ReplicatedStorage.Common.Modules.StatCalculator)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
@@ -239,8 +241,7 @@ local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
         Scope:Observer(Item):onBind(function()
             local Data = Peek(Item)
 
-            local Rarity = Data and Fish[Data.Name] and Fish[Data.Name].Rarity or "Common"
-
+            local Rarity = Data and Fish[Data.Name] and Fish[Data.Name].Rarity
             if i == 1 then
                 Rarity = "Hammer"
             end
@@ -249,6 +250,10 @@ local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
             if Old_Gradient then
                 Old_Gradient:Destroy()
+            end
+
+            if not Rarity then
+                return
             end
 
             UIGradients:FindFirstChild(Rarity):Clone().Parent = Slot
@@ -339,9 +344,7 @@ local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             [OnEvent("MouseLeave")] = function()
                 Hovering:set(false)
             end,
-            [OnEvent("Activated")] = function()
-                OnActivate()
-            end,
+            [OnEvent("Activated")] = OnActivate,
             [Children] = {
                 Scope:New("UIScale")({
                     Scale = SizeMultiplierSpring,
@@ -349,7 +352,7 @@ local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             },
         })
 
-        UserInputService.InputBegan:Connect(function(Input, Processed)
+        --[[UserInputService.InputBegan:Connect(function(Input, Processed)
             if Processed then
                 return
             end
@@ -368,11 +371,34 @@ local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             if Input.KeyCode == KeyCodes[i] then
                 OnActivate()
             end
-        end)
+        end)]]
 
         Slot.Visible = true
         Slot.Parent = Hotbar
     end
+
+    UserInputService.InputBegan:Connect(function(Input, Processed)
+        if Processed then
+            return
+        end
+
+        local KeyCodes = {
+            Enum.KeyCode.One,
+            Enum.KeyCode.Two,
+            Enum.KeyCode.Three,
+            Enum.KeyCode.Four,
+            Enum.KeyCode.Five,
+            Enum.KeyCode.Six,
+            Enum.KeyCode.Seven,
+            Enum.KeyCode.Eight,
+        }
+
+        local Num = table.find(KeyCodes, Input.KeyCode)
+
+        if Num then
+            Network.Requests.EquipSlot.Fire(Num)
+        end
+    end)
 end
 
 local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
@@ -399,6 +425,7 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     local Right = HUD:WaitForChild("Right")
     local Free_Reward = Right:WaitForChild("FreeReward") :: ImageButton
+    local Rebirth = Right:WaitForChild("Rebirth") :: ImageButton
 
     Setup_Hotbar(LocalEntity, PlayerGui)
 
@@ -563,6 +590,20 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     end)
 
     Scope:Hydrate(Index)({
+        Visible = Scope:Computed(function(Use)
+            return (Use(Fusion_Values.Tutorial_Step) > 9)
+        end),
+    })
+
+    Hydrate_Button(Rebirth, function()
+        if Peek(Fusion_Values.Screen) == "Rebirth" then
+            Fusion_Values.Screen:set("HUD")
+        else
+            Fusion_Values.Screen:set("Rebirth")
+        end
+    end)
+
+    Scope:Hydrate(Rebirth, {
         Visible = Scope:Computed(function(Use)
             return (Use(Fusion_Values.Tutorial_Step) > 9)
         end),
@@ -1567,6 +1608,361 @@ local function Setup_Max_Auto_Swing_Prompts(LocalEntity: Types.Entity)
     end
 end
 
+local function Setup_Rebirth(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
+    local Next_Rebirth_Data_Computed = Scope:Computed(function(Use)
+        return Rebirths[Use(Fusion_Values.Rebirth) + 1]
+    end)
+
+    local Can_Rebirth_Computed = Scope:Computed(function(Use)
+        local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+        local Cash = Use(Fusion_Values.Cash)
+        local Inventory = Use(Fusion_Values.Inventory)
+
+        if not Next_Rebirth_Data then
+            return false
+        end
+
+        if Cash < Next_Rebirth_Data.Requirements.Cash then
+            return false
+        end
+
+        for _, Name in Next_Rebirth_Data.Requirements.Fish do
+            local HasFish = false
+
+            for _, Item in Inventory do
+                if Item.Name == Name then
+                    HasFish = true
+                    break
+                end
+            end
+
+            if not HasFish then
+                return false
+            end
+        end
+
+        return true
+    end)
+
+    local Rebirth_Button_Text_Computed = Scope:Computed(function(Use)
+        local Current_Rebirth = Use(Fusion_Values.Rebirth)
+
+        if Current_Rebirth == #Rebirths then
+            return "Max Rebirth"
+        end
+
+        return "Rebirth"
+    end)
+
+    local Cash_Progress_Text_Computed = Scope:Computed(function(Use)
+        local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+
+        if not Next_Rebirth_Data then
+            return ""
+        end
+
+        local Current_Cash = Use(Fusion_Values.Cash)
+        local Cash_Required = Next_Rebirth_Data.Requirements.Cash
+
+        return `${Abbreviate_Number(Current_Cash)}/${Abbreviate_Number(Cash_Required)}`
+    end)
+
+    local Cash_Percentage = Scope:Computed(function(Use)
+        local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+
+        if not Next_Rebirth_Data then
+            return 0
+        end
+
+        local Current_Cash = Use(Fusion_Values.Cash)
+        local Cash_Required = Next_Rebirth_Data.Requirements.Cash
+
+        return math.clamp(Current_Cash / Cash_Required, 0, 1)
+    end)
+
+    Scope:Observer(Can_Rebirth_Computed):onBind(function()
+        if Peek(Can_Rebirth_Computed) == true then
+            local Notification = World:entity()
+
+            World:set(Notification, Components.Text, "You can rebirth!")
+            World:add(Notification, Components.Tags.Notification)
+        end
+    end)
+
+    -- Handle HUD rebirth
+    local HUD = PlayerGui:WaitForChild("HUD") :: ScreenGui
+    local Rebirth_Progress = HUD:WaitForChild("Rebirth_Progress") :: Frame
+    local Rebirth_Progress_Inside = Rebirth_Progress:WaitForChild("Inside")
+
+    Scope:Hydrate(Rebirth_Progress)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "HUD"
+        end),
+    })
+
+    Scope:Hydrate(Rebirth_Progress_Inside)({
+        Size = Scope:Tween(Scope:Computed(function(Use)
+            return UDim2.fromScale(Use(Cash_Percentage), 1)
+        end)),
+    })
+
+    local Rebirth_Cash_Progress = Rebirth_Progress:WaitForChild("Title") :: TextLabel
+
+    Scope:Hydrate(Rebirth_Cash_Progress)({
+        Text = Cash_Progress_Text_Computed,
+    })
+
+    local Rebirth_Button = HUD:WaitForChild("Rebirth") :: ImageButton
+    local Rebirth_Button_Text = Rebirth_Button:WaitForChild("Title") :: TextLabel
+    local Rebirth_UIGradient = Rebirth_Button:FindFirstChildOfClass("UIGradient")
+
+    Scope:Hydrate(Rebirth_UIGradient)({
+        Enabled = Can_Rebirth_Computed,
+    })
+
+    Scope:Hydrate(Rebirth_Button)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "HUD"
+        end),
+        ImageColor3 = Scope:Computed(function(Use)
+            if Use(Can_Rebirth_Computed) then
+                return Color3.fromRGB(255, 255, 255)
+            else
+                return Color3.fromRGB(148, 148, 148)
+            end
+        end),
+    })
+
+    Hydrate_Button(Rebirth_Button, function()
+        Network.Requests.Rebirth.Fire()
+    end)
+
+    Scope:Hydrate(Rebirth_Button_Text)({
+        Text = Rebirth_Button_Text_Computed,
+    })
+
+    -- Handle rebirth frame
+
+    local Panels = PlayerGui:WaitForChild("Panels") :: ScreenGui
+    local Rebirth = Panels:WaitForChild("Rebirth") :: ImageLabel
+    local Contents = Rebirth:WaitForChild("Contents") :: Frame
+    local Close = Rebirth:WaitForChild("Close") :: ImageButton
+
+    Hydrate_Button(Close, function()
+        Fusion_Values.Screen:set("HUD")
+    end)
+
+    Scope:Hydrate(Rebirth)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "Rebirth"
+        end),
+    })
+
+    local Rebirth_Panel_Button = Rebirth:WaitForChild("Rebirth") :: ImageButton
+    local Rebirth_Panel_Button_Text = Rebirth_Panel_Button:WaitForChild("Title") :: TextLabel
+    local Rebirth_Panel_Button_UIGradient = Rebirth_Panel_Button:FindFirstChildOfClass("UIGradient")
+
+    Scope:Hydrate(Rebirth_Panel_Button)({
+        ImageColor3 = Scope:Computed(function(Use)
+            if Use(Can_Rebirth_Computed) then
+                return Color3.fromRGB(255, 255, 255)
+            else
+                return Color3.fromRGB(148, 148, 148)
+            end
+        end),
+    })
+
+    Hydrate_Button(Rebirth_Panel_Button, function()
+        Network.Requests.Rebirth.Fire()
+    end)
+
+    Scope:Hydrate(Rebirth_Panel_Button_Text)({
+        Text = Rebirth_Button_Text_Computed,
+    })
+
+    Scope:Hydrate(Rebirth_Panel_Button_UIGradient)({
+        Enabled = Can_Rebirth_Computed,
+    })
+
+    local Rebirth_Panel_Progress = Contents:WaitForChild("Progress")
+    local Rebirth_Panel_Progress_Inside = Rebirth_Panel_Progress:WaitForChild("Inside") :: Frame
+    local Rebirth_Panel_Progress_Text = Rebirth_Panel_Progress:WaitForChild("Title")
+
+    Scope:Hydrate(Rebirth_Panel_Progress_Inside)({
+        Size = Scope:Tween(Scope:Computed(function(Use)
+            return UDim2.fromScale(Use(Cash_Percentage), 1)
+        end)),
+    })
+
+    Scope:Hydrate(Rebirth_Panel_Progress_Text)({
+        Text = Cash_Progress_Text_Computed,
+    })
+
+    local Rebirth_Panel_Cash_Text = Contents.Requirements.Cash.Amount :: TextLabel
+
+    Scope:Hydrate(Rebirth_Panel_Cash_Text)({
+        Text = Scope:Computed(function(Use)
+            local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+
+            if not Next_Rebirth_Data then
+                return "?"
+            end
+
+            return `${Util.Format_Number_With_Commas(Next_Rebirth_Data.Requirements.Cash)}`
+        end),
+    })
+
+    local Rebirth_Panel_Cash_Multiplier_Text = Contents.Rewards.Cash_Multiplier.Multiplier :: TextLabel
+
+    Scope:Hydrate(Rebirth_Panel_Cash_Multiplier_Text)({
+        Text = Scope:Computed(function(Use)
+            local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+
+            if not Next_Rebirth_Data then
+                return "?"
+            end
+
+            return `x{Next_Rebirth_Data.Rewards.Cash_Multiplier}`
+        end),
+    })
+
+    -- Handle Viewports :D
+
+    local Fish_Template = Contents.Requirements.Fish_Template :: ImageButton
+
+    Scope:Hydrate(Contents.Requirements)({
+        [Children] = {
+            Scope:Computed(function(Use, Processor: Fusion.Scope<Fusion.Fusion>)
+                local T = {}
+                local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+
+                if not Next_Rebirth_Data then
+                    return T
+                end
+
+                for _, Name in Next_Rebirth_Data.Requirements.Fish do
+                    local ImageLabel = Fish_Template:Clone()
+                    ImageLabel.Visible = true
+
+                    local Title = ImageLabel.Title
+                    Title.Text = Name
+
+                    local Fish_Data = Fish[Name]
+
+                    local Old_Viewport_Frame = ImageLabel:FindFirstChildOfClass("ViewportFrame")
+
+                    if Old_Viewport_Frame then
+                        Old_Viewport_Frame:Destroy()
+                    end
+
+                    local Viewport = Instance.new("ViewportFrame")
+                    Viewport.Ambient = Color3.fromRGB(255, 255, 255)
+                    Viewport.LightColor = Color3.fromRGB(255, 255, 255)
+                    Viewport.BackgroundTransparency = 1
+                    Viewport.AnchorPoint = Vector2.new(0.5, 0.5)
+                    Viewport.Position = UDim2.fromScale(0.5, 0.5)
+                    Viewport.Size = UDim2.fromScale(0.9, 0.9)
+                    Viewport.Parent = ImageLabel
+
+                    local WorldModel = Instance.new("WorldModel")
+                    WorldModel.Parent = Viewport
+
+                    local Camera = Instance.new("Camera")
+                    Camera.CFrame = CFrame.new(Vector3.zero)
+                    Camera.Parent = Viewport
+
+                    Viewport.CurrentCamera = Camera
+
+                    local Model = Fish_Data.Models.Normal:Clone()
+                    Model.Parent = Debris_Folder
+                    Model:PivotTo(Fish_Data.Viewport_CFrame)
+
+                    local Animator = Model:FindFirstChild("Animator", true) :: Animator
+
+                    AnimPlayer.Load(Animator)
+
+                    AnimPlayer.PlayAnimation(Animator, {
+                        Name = "Fish [Idle]",
+                        Loop = true,
+                    })
+
+                    Model.Parent = WorldModel
+
+                    table.insert(T, ImageLabel)
+                end
+
+                return T
+            end),
+        },
+    })
+
+    Scope:Hydrate(Contents.Rewards)({
+        [Children] = {
+            Scope:Computed(function(Use, Processor: Fusion.Scope<Fusion.Fusion>)
+                local T = {}
+                local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+
+                if not Next_Rebirth_Data then
+                    return T
+                end
+
+                for _, Name in Next_Rebirth_Data.Rewards.Fish do
+                    local ImageLabel = Fish_Template:Clone()
+                    ImageLabel.Visible = true
+
+                    local Title = ImageLabel.Title
+                    Title.Text = Name
+
+                    local Fish_Data = Fish[Name]
+
+                    local Old_Viewport_Frame = ImageLabel:FindFirstChildOfClass("ViewportFrame")
+
+                    if Old_Viewport_Frame then
+                        Old_Viewport_Frame:Destroy()
+                    end
+
+                    local Viewport = Instance.new("ViewportFrame")
+                    Viewport.Ambient = Color3.fromRGB(255, 255, 255)
+                    Viewport.LightColor = Color3.fromRGB(255, 255, 255)
+                    Viewport.BackgroundTransparency = 1
+                    Viewport.AnchorPoint = Vector2.new(0.5, 0.5)
+                    Viewport.Position = UDim2.fromScale(0.5, 0.5)
+                    Viewport.Size = UDim2.fromScale(0.9, 0.9)
+                    Viewport.Parent = ImageLabel
+
+                    local WorldModel = Instance.new("WorldModel")
+                    WorldModel.Parent = Viewport
+
+                    local Camera = Instance.new("Camera")
+                    Camera.CFrame = CFrame.new(Vector3.zero)
+                    Camera.Parent = Viewport
+
+                    Viewport.CurrentCamera = Camera
+
+                    local Model = Fish_Data.Models.Normal:Clone()
+                    Model.Parent = Debris_Folder
+                    Model:PivotTo(Fish_Data.Viewport_CFrame)
+
+                    local Animator = Model:FindFirstChild("Animator", true) :: Animator
+
+                    AnimPlayer.Load(Animator)
+
+                    AnimPlayer.PlayAnimation(Animator, {
+                        Name = "Fish [Idle]",
+                        Loop = true,
+                    })
+
+                    Model.Parent = WorldModel
+
+                    table.insert(T, ImageLabel)
+                end
+
+                return T
+            end),
+        },
+    })
+end
+
 return {
     name = script.Name,
     phase = Phases.InitPhases.Init,
@@ -1588,6 +1984,7 @@ return {
             Setup_Notifications(LocalEntity, PlayerGui)
             Setup_Free_Reward(LocalEntity, PlayerGui)
             Setup_Max_Auto_Swing_Prompts(LocalEntity)
+            Setup_Rebirth(LocalEntity, PlayerGui)
 
             Scope:Observer(Fusion_Values.Screen):onBind(function()
                 if Peek(Fusion_Values.Screen) == "HUD" then

@@ -8,6 +8,7 @@ local Components: {
     Renderable: Types.Id<Model>,
     Cleanup: Types.Id<() -> ()>,
 
+    Rebirth: Types.Id<number>,
     Equipped_Slot: Types.Id<number>,
     Cash: Types.Id<number>,
     Tool_Level: Types.Id<number>,
@@ -80,6 +81,7 @@ local Components: {
         Renderable = World:component(),
         Cleanup = World:component(),
 
+        Rebirth = World:component(),
         Equipped_Slot = World:component(),
         Cash = World:component(),
         Tool_Level = World:component(),

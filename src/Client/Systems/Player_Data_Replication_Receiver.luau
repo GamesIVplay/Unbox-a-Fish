@@ -661,6 +661,14 @@ local function Handle_Equipped_Slot(LocalEntity: Types.Entity)
     end
 end
 
+local function Handle_Rebirth_Changes(LocalEntity: Types.Entity)
+    for _, Data in Network.PlayerChanges.Rebirth.Iter() do
+        World:set(LocalEntity, Components.Rebirth, Data)
+
+        Fusion_Values.Rebirth:set(Data)
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.First,
@@ -708,6 +716,8 @@ return {
         Handle_Inventory(LocalEntity)
 
         Handle_Equipped_Slot(LocalEntity)
+
+        Handle_Rebirth_Changes(LocalEntity)
     end,
     runConditions = {},
 }

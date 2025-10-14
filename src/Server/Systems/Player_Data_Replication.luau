@@ -244,6 +244,19 @@ local function Replicate_Equipped_Slot(Player: Player, Entity: Types.Entity)
     end
 end
 
+local function Replicate_Rebirth(Player: Player, Entity: Types.Entity)
+    local Rebirth = World:get(Entity, Components.Rebirth)
+    local Previous_Rebirth = World:get(Entity, Pair(Components.Relationships.Previous, Components.Rebirth))
+
+    if Rebirth ~= Previous_Rebirth then
+        Network.PlayerChanges.Rebirth.Fire(Player, Rebirth)
+
+        World:set(Entity, Pair(Components.Relationships.Previous, Components.Rebirth), Rebirth)
+
+        Log.Info(`{Player.Name}'s rebirth was changed to {Rebirth}`)
+    end
+end
+
 return {
     name = script.Name,
     phase = Phases.Runservice.PostUpdate,
@@ -272,6 +285,8 @@ return {
             Replicate_Bought_One_Time_Offer(Player, Entity)
 
             Replicate_Equipped_Slot(Player, Entity)
+
+            Replicate_Rebirth(Player, Entity)
         end
     end,
     runConditions = {},

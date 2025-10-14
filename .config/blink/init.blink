@@ -178,6 +178,12 @@ scope Requests {
        Call: SingleSync,
        Data: Types.Entity
     }
+
+    event Rebirth {
+       From: Client,
+       Type: Reliable,
+       Call: SingleSync,
+    }
 }
 
 scope PlayerChanges {
@@ -266,6 +272,13 @@ scope PlayerChanges {
     }
 
     event EquippedSlot {
+        From: Server,
+        Type: Reliable,
+        Call: SingleSync,
+        Data: u8 
+    }
+
+    event Rebirth {
         From: Server,
         Type: Reliable,
         Call: SingleSync,

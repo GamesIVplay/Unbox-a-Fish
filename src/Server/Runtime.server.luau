@@ -32,6 +32,7 @@ Start({
     require(Systems.Sell),
     require(Systems.Rig),
     require(Systems.Gift),
+    require(Systems.Rebirth),
     require(Systems.Reducer),
     require(Systems.GroupReward),
     require(Systems.Fish_Cleanup),

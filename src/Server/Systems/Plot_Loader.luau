@@ -21,18 +21,23 @@ local World = require(ReplicatedStorage.Common.World)
 
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
+local Rebirths = require(ReplicatedStorage.Common.Modules.Rebirths)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
-local Queued_Fish =
-    World:query(Components.Player, Components.LastPlayed, Pair(Components.Relationships.Queued, Components.Tags.Fish))
-        :with(Pair(Components.Relationships.Plot, Jecs.Wildcard))
-        :cached()
+local Queued_Fish = World:query(
+    Components.Player,
+    Components.LastPlayed,
+    Components.Rebirth,
+    Pair(Components.Relationships.Queued, Components.Tags.Fish)
+)
+    :with(Pair(Components.Relationships.Plot, Jecs.Wildcard))
+    :cached()
 
 return {
     name = script.Name,
     phase = Phases.Runservice.Update,
     system = function()
-        for Player_Entity, Player: Player, LastPlayed: number, Queued_Fish in Queued_Fish:iter() do
+        for Player_Entity, Player: Player, LastPlayed: number, Rebirth: number, Queued_Fish in Queued_Fish:iter() do
             local Plot_Entity = World:target(Player_Entity, Components.Relationships.Plot)
 
             local Plot_Model = World:get(Plot_Entity, Components.Renderable) :: Model
@@ -54,6 +59,12 @@ return {
                 local Fish_Data = Fish[Data.Name]
 
                 local IncomePerSec = Fish_Data.IncomePerSec
+
+                local Rebirth_Data = Rebirths[Rebirth]
+
+                if Rebirth_Data then
+                    IncomePerSec *= Rebirth_Data.Rewards.Cash_Multiplier
+                end
 
                 if Fish_Mutation then
                     local Mutation_Data = Mutations[Fish_Mutation]

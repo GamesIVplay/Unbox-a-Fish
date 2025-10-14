@@ -17,6 +17,7 @@ local Pair = Jecs.pair
 
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
 local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
+local Rebirths = require(ReplicatedStorage.Common.Modules.Rebirths)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
 local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
@@ -41,6 +42,7 @@ return {
         do
             local Owner_Entity = World:target(Fish_Entity, Components.Relationships.Owner)
 
+            local Rebirth = World:get(Owner_Entity, Components.Rebirth)
             local FriendBoost = World:get(Owner_Entity, Components.FriendBoost)
 
             local Mutation = World:get(Fish_Entity, Components.Mutation)
@@ -49,6 +51,12 @@ return {
 
             local Fish_Data = Fish[Fish_Name]
             local IncomePerSec = Fish_Data.IncomePerSec
+
+            local Rebirth_Data = Rebirths[Rebirth]
+
+            if Rebirth_Data then
+                IncomePerSec *= Rebirth_Data.Rewards.Cash_Multiplier
+            end
 
             if Mutation then
                 local Mutation_Data = Mutations[Mutation]

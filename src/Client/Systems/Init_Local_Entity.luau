@@ -19,6 +19,8 @@ return {
 
         World:set(LocalEntity, Components.Player, LocalPlayer)
 
+        World:set(LocalEntity, Components.Equipped_Slot, 0)
+        World:set(LocalEntity, Components.Rebirth, 0)
         World:set(LocalEntity, Components.Cash, 0)
         World:set(LocalEntity, Components.Tool_Level, 1)
         World:set(LocalEntity, Components.Luck_Level, 1)

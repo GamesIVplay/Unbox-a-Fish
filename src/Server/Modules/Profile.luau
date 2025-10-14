@@ -6,6 +6,7 @@ local Types = require(ReplicatedStorage.Common.Types)
 local Log = require(ReplicatedStorage.Common.Log)
 
 type ProfileData = {
+    Rebirth: number,
     Cash: number,
     Tool_Level: number,
     Luck_Level: number,
@@ -39,6 +40,7 @@ local ProfileStore = require(ReplicatedStorage.Packages.ProfileStore)
 type Profile = ProfileStore.Profile<ProfileData>
 
 local PLAYER_DATA_TEMPLATE: ProfileData = {
+    Rebirth = 0,
     Cash = 600,
     Tool_Level = 1,
     Luck_Level = 1,

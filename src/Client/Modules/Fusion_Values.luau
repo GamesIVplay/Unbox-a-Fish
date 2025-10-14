@@ -4,6 +4,7 @@ local Scope = Fusion.scoped(Fusion)
 
 return table.freeze({
     Screen = Scope:Value("HUD"),
+    Rebirth = Scope:Value(0),
     Cash = Scope:Value(0),
     Tool_Level = Scope:Value(1),
     Luck_Level = Scope:Value(1),

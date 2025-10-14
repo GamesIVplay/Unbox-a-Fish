@@ -75,6 +75,35 @@ local function Add_Badges(Player: Player)
     BadgeService:AwardBadge(Player.UserId, Badges["Fish!"])
 end
 
+local function ConvertInventory(OldInventory)
+    local New_Inventory = {}
+
+    for Mutation, Items in OldInventory do
+        for Name, Amount in Items do
+            table.insert(New_Inventory, {
+                Name = Name,
+                Mutation = Mutation ~= "Normal" and Mutation or nil,
+                Amount = Amount,
+            })
+        end
+    end
+
+    return New_Inventory
+end
+
+local function Ensure_New_Inventory_Format(Inventory: { any })
+    local FirstKey = next(Inventory)
+    if FirstKey == nil then
+        return Inventory
+    end
+
+    if type(FirstKey) == "string" then
+        return ConvertInventory(Inventory)
+    end
+
+    return Inventory
+end
+
 local function Handle_New_Players()
     for _, Player in Network.ClientLoaded.Iter() do
         task.spawn(function()
@@ -90,12 +119,15 @@ local function Handle_New_Players()
 
             local ProfileData = PlayerProfile.Data
 
+            ProfileData.Inventory = Ensure_New_Inventory_Format(ProfileData.Inventory)
+
             local PlayerEntity = World:entity()
             Registry.Define("Players", Player, PlayerEntity)
 
             World:set(PlayerEntity, Components.Name, Player.Name)
             World:set(PlayerEntity, Components.Player, Player)
 
+            World:set(PlayerEntity, Components.Rebirth, ProfileData.Rebirth)
             World:set(PlayerEntity, Components.Equipped_Slot, 0)
             World:set(PlayerEntity, Components.Cash, ProfileData.Cash)
             World:set(PlayerEntity, Components.Tool_Level, ProfileData.Tool_Level)
@@ -164,6 +196,7 @@ local function Handle_New_Players()
                     return
                 end
 
+                ProfileData.Rebirth = World:get(PlayerEntity, Components.Rebirth)
                 ProfileData.Cash = World:get(PlayerEntity, Components.Cash)
                 ProfileData.Tool_Level = World:get(PlayerEntity, Components.Tool_Level)
                 ProfileData.Luck_Level = World:get(PlayerEntity, Components.Luck_Level)
