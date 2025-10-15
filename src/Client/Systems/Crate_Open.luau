@@ -1,6 +1,7 @@
 local Debris = game:GetService("Debris")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local Debris_Folder = workspace:WaitForChild("Debris")
 
@@ -34,9 +35,9 @@ local World = require(ReplicatedStorage.Common.World)
 
 local AnimPlayer = require(ReplicatedStorage.Common.Modules.AnimPlayer)
 local Fish = require(ReplicatedStorage.Common.Modules.Fish)
+local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 local Roll_Fish = require(ReplicatedStorage.Common.Modules.Roll_Fish)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
-local Mutations = require(ReplicatedStorage.Common.Modules.Mutations)
 
 -- Configurable tunables
 local BASE_CYCLE_DURATION = 4 -- total cycle time (seconds)
@@ -65,6 +66,7 @@ return {
                 local Gurantee_Mutation = Data.GuranteeMutation
                 local Result_Name = Data.Result.Name
                 local Result_Mutation = Data.Result.Mutation
+                local Result_Stand = Data.Result.Stand
 
                 -- Spawn base effect part
                 local Part = Instance.new("Part")
@@ -203,7 +205,7 @@ return {
 
                     Gradient.Parent = Rarity
 
-                   local IncomePerSecValue = Fish_Data.IncomePerSec
+                    local IncomePerSecValue = Fish_Data.IncomePerSec
 
                     if Result_Mutation then
                         local Mutation_Data = Mutations[Result_Mutation]
@@ -258,6 +260,32 @@ return {
 
                     Util.Tween_Model_Scale(0.5, END_SCALE * 1.5, FISH_Bounce_Tween_Info, Model)
 
+                    task.delay(2, function()
+                        if Result_Stand then
+                            local Goal_CF = Result_Stand.Stand.Floor.Place_Attachment.WorldCFrame
+                                * Model.PrimaryPart.PivotOffset:Inverse()
+
+                            -- Tween Info: duration, easing style, direction
+                            local TweenInfoSettings = TweenInfo.new(
+                                3, -- Time (seconds)
+                                Enum.EasingStyle.Sine, -- Easing style
+                                Enum.EasingDirection.Out, -- Easing direction
+                                0, -- Repeat count (0 = once)
+                                false, -- Reverses
+                                0 -- Delay time
+                            )
+
+                            -- Tween goal: move the model to the target CFrame
+                            local TweenGoal = {
+                                CFrame = Goal_CF,
+                            }
+
+                            -- You can tween a *PrimaryPart* of a model, not the model directly
+                            local Tween = TweenService:Create(Model.PrimaryPart, TweenInfoSettings, TweenGoal)
+                            Tween:Play()
+                        end
+                    end)
+
                     local NewPart = Instance.new("Part")
                     NewPart.Transparency = 1
                     NewPart.CFrame = CF * CFrame.new(0, 4.5, 0)
@@ -276,10 +304,10 @@ return {
 
                     Debris:AddItem(NewPart, 3)
 
-                    task.delay(4, function()
+                    task.delay(6, function()
                         local Part = Instance.new("Part")
                         Part.Transparency = 1
-                        Part.CFrame = CF * CFrame.new(0, 4, 0)
+                        Part.CFrame = Model:GetPivot() * CFrame.new(0, 4.5, 0)
                         Part.CanCollide = false
                         Part.Anchored = true
                         Part.Parent = Debris_Folder

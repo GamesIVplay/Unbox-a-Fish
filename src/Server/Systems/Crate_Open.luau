@@ -119,6 +119,75 @@ return {
                 Rolled_Fish_Income_Per_Sec *= Mutations[Fish_Mutation].Multiplier
             end
 
+            local Plot_Model = World:get(Plot_Entity, Components.Renderable) :: Model
+            local Stands = Plot_Model:FindFirstChild("Stands")
+
+            local Stand_Count = World:has(Plot_Owner, Components.Tags.DoubleSlots) and 12 or 10
+
+            local Open_Stand: Model?
+
+            for Stand = 1, Stand_Count do
+                local Stand_Model = Stands:FindFirstChild(Stand)
+
+                if Stand_Model:HasTag("Occupied") then
+                    continue
+                end
+
+                Open_Stand = Stand_Model
+                break
+            end
+
+            if not Open_Stand then
+                local Fish_To_Replace_Entity
+                local Fish_To_Replace_Name
+                local Fish_To_Replace_Mutation
+                local Stand_To_Replace
+                local Lowest_Income_Per_Sec = math.huge -- start very high
+
+                for Fish_Entity, Target_Fish_Name: string, Stand: Model in
+                    World:query(Components.Name, Components.Stand)
+                        :with(Pair(Components.Relationships.Owner, Plot_Owner))
+                do
+                    local Mutation = World:get(Fish_Entity, Components.Mutation)
+
+                    local Fish_Data = Fish[Target_Fish_Name]
+                    local IncomePerSec = Fish_Data.IncomePerSec
+
+                    if Mutation then
+                        IncomePerSec *= Mutations[Mutation].Multiplier
+                    end
+
+                    -- Track the lowest income/sec fish
+                    if IncomePerSec < Lowest_Income_Per_Sec then
+                        Fish_To_Replace_Entity = Fish_Entity
+                        Fish_To_Replace_Name = Target_Fish_Name
+                        Fish_To_Replace_Mutation = Mutation
+                        Lowest_Income_Per_Sec = IncomePerSec
+                        Stand_To_Replace = Stand
+                    end
+                end
+
+                if Rolled_Fish_Income_Per_Sec > Lowest_Income_Per_Sec then
+                    World:delete(Fish_To_Replace_Entity)
+
+                    Open_Stand = Stand_To_Replace
+
+                    Add_Fish(Inventory, Fish_To_Replace_Name, Fish_To_Replace_Mutation)
+
+                    local Mutation_Text = Fish_To_Replace_Mutation ~= nil and (Fish_To_Replace_Mutation .. " ") or ""
+
+                    Network.Notification.Fire(Plot_Owner_Player, {
+                        Text = `{Mutation_Text}{Fish_To_Replace_Name} was moved to inventory`,
+                    })
+
+                    World:set(Plot_Owner, Components.Inventory, Inventory)
+                end
+            end
+
+            if Open_Stand then
+                Open_Stand:AddTag("Occupied")
+            end
+
             Network.OpenTrapEffect.FireAll({
                 Crate = Crate_Name,
                 CF = Crate_Model:GetPivot(),
@@ -128,10 +197,11 @@ return {
                 Result = {
                     Name = Fish_Name,
                     Mutation = Fish_Mutation,
+                    Stand = Open_Stand,
                 },
             })
 
-            task.delay(8.5, function()
+            task.delay(10.5, function()
                 if not World:contains(Crate_Entity) or not World:contains(Plot_Owner) then
                     return
                 end
@@ -144,78 +214,10 @@ return {
 
                 local Unboxes = World:get(Plot_Owner, Components.Unboxes)
 
-                local Plot_Model = World:get(Plot_Entity, Components.Renderable) :: Model
-                local Stands = Plot_Model:FindFirstChild("Stands")
-
-                local Stand_Count = World:has(Plot_Owner, Components.Tags.DoubleSlots) and 12 or 10
-
-                local Open_Stand: Model?
-
-                for Stand = 1, Stand_Count do
-                    local Stand_Model = Stands:FindFirstChild(Stand)
-
-                    if Stand_Model:HasTag("Occupied") then
-                        continue
-                    end
-
-                    Open_Stand = Stand_Model
-                    break
-                end
-
-                if not Open_Stand then
-                    local Fish_To_Replace_Entity
-                    local Fish_To_Replace_Name
-                    local Fish_To_Replace_Mutation
-                    local Stand_To_Replace
-                    local Lowest_Income_Per_Sec = math.huge -- start very high
-
-                    for Fish_Entity, Fish_Name: string, Stand: Model in
-                        World:query(Components.Name, Components.Stand)
-                            :with(Pair(Components.Relationships.Owner, Plot_Owner))
-                    do
-                        local Mutation = World:get(Fish_Entity, Components.Mutation)
-
-                        local Fish_Data = Fish[Fish_Name]
-                        local IncomePerSec = Fish_Data.IncomePerSec
-
-                        if Mutation then
-                            IncomePerSec *= Mutations[Mutation].Multiplier
-                        end
-
-                        -- Track the lowest income/sec fish
-                        if IncomePerSec < Lowest_Income_Per_Sec then
-                            Fish_To_Replace_Entity = Fish_Entity
-                            Fish_To_Replace_Name = Fish_Name
-                            Fish_To_Replace_Mutation = Mutation
-                            Lowest_Income_Per_Sec = IncomePerSec
-                            Stand_To_Replace = Stand
-                        end
-                    end
-
-                    if Rolled_Fish_Income_Per_Sec > Lowest_Income_Per_Sec then
-                        World:delete(Fish_To_Replace_Entity)
-
-                        Open_Stand = Stand_To_Replace
-
-                        Add_Fish(Inventory, Fish_To_Replace_Name, Fish_To_Replace_Mutation)
-
-                        local Mutation_Text = Fish_To_Replace_Mutation ~= nil and (Fish_To_Replace_Mutation .. " ")
-                            or ""
-
-                        Network.Notification.Fire(Plot_Owner_Player, {
-                            Text = `{Mutation_Text}{Fish_To_Replace_Name} was moved to inventory`,
-                        })
-
-                        World:set(Plot_Owner, Components.Inventory, Inventory)
-                    end
-                end
-
                 local Fish_Data = Fish[Fish_Name]
 
                 if Open_Stand then
                     local Stand = Open_Stand:FindFirstChild("Stand") :: Model
-
-                    Open_Stand:AddTag("Occupied")
 
                     local Fish_Model = Fish_Data.Models[Fish_Mutation and Fish_Mutation or "Normal"]:Clone() :: Model
                     Fish_Model.Parent = Fish_Folder

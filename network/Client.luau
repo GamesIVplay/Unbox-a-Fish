@@ -238,7 +238,7 @@ local function ReadEVENT_AddOwnedHighlight(): (Model)
 	return Value
 end
 
-local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
+local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } })
 	-- Read BLOCK: 46 bytes
 	local BLOCK_START = Read(46)
 	local Value = {} :: any
@@ -280,6 +280,14 @@ local function ReadEVENT_OpenTrapEffect(): ({ Owner: number, Crate: string, CF: 
 		else
 			error(`Unexpected enum: {Index}`)
 		end
+	end
+	RecieveInstanceCursor += 1
+	if typeof(RecieveInstances[RecieveInstanceCursor]) == "Instance" then
+		RecieveInstanceCursor -= 1
+		RecieveInstanceCursor += 1
+		Value.Result.Stand = RecieveInstances[RecieveInstanceCursor]
+		if typeof(Value.Result.Stand) ~= "Instance" then error(`Expected an Instance, got {typeof(Value.Result.Stand)} instead.`) end
+		if not Value.Result.Stand:IsA("Model") then error(`Expected an Instance of type "Model", got "{Value.Result.Stand.ClassName}" instead.`) end
 	end
 	return Value
 end
@@ -1014,10 +1022,10 @@ local Returns = table.freeze({
 		end
 	},
 	OpenTrapEffect = {
-		Iter = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
+		Iter = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } })
 			local index = 0
 			local queue = Queue.Reliable[6]
-			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
+			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } })
 				index += 1
 				local arguments = Pop(queue)
 				if arguments ~= nil then
@@ -1027,10 +1035,10 @@ local Returns = table.freeze({
 			end
 		end,
 		--- @deprecated v0.14.1 -- Use `Iter` instead.
-		Next = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
+		Next = function(): () -> (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } })
 			local index = 0
 			local queue = Queue.Reliable[6]
-			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } })
+			return function (): (number, { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } })
 				index += 1
 				local arguments = Pop(queue)
 				if arguments ~= nil then

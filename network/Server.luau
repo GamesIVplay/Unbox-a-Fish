@@ -237,7 +237,7 @@ local function WriteEVENT_AddOwnedHighlight(Value: Model): ()
 	table.insert(SendInstances, Value or Null)
 end
 
-local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
+local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } }): ()
 	-- Allocate BLOCK: 47 bytes
 	local BLOCK_START = Allocate(47)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
@@ -282,6 +282,7 @@ local function WriteEVENT_OpenTrapEffect(Value: { Owner: number, Crate: string, 
 			error(`Unexpected enum: {Value.Result.Mutation}, expected one of "Normal" or "Gold" or "Diamond" or "Rainbow" or "Shocked" or "Candy" or "BloodMoon".`)
 		end
 	end
+	table.insert(SendInstances, Value.Result.Stand or Null)
 end
 
 local function WriteEVENT_AddPickupPrompt(Value: Model): ()
@@ -1184,12 +1185,12 @@ local Returns = table.freeze({
 		end,
 	},
 	OpenTrapEffect = {
-		Fire = function(Player: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
+		Fire = function(Player: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } }): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_OpenTrapEffect(Value)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
+		FireAll = function(Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1201,7 +1202,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
+		FireList = function(List: {Player}, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1213,7 +1214,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")? } }): ()
+		FireExcept = function(Except: Player, Value: { Owner: number, Crate: string, CF: CFrame, MutationMultiplier: number, GuranteeMutation: boolean, Result: { Name: string, Mutation: ("Normal" | "Gold" | "Diamond" | "Rainbow" | "Shocked" | "Candy" | "BloodMoon")?, Stand: Model? } }): ()
 			Load()
 			WriteEVENT_OpenTrapEffect(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances

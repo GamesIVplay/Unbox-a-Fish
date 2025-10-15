@@ -43,6 +43,10 @@ return {
             local Plot_Model = World:get(Plot_Entity, Components.Renderable) :: Model
             local Stands = Plot_Model:FindFirstChild("Stands")
 
+            for _, Stand: Model in Stands:GetChildren() do
+                Stand:RemoveTag("Occupied")
+            end
+
             local Total_Offline_Cash = 0
 
             for Stand_Name, Data in Queued_Fish do

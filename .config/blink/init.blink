@@ -61,7 +61,8 @@ event OpenTrapEffect {
         GuranteeMutation: boolean,
         Result: struct {
             Name: string,
-            Mutation: Types.Mutation?
+            Mutation: Types.Mutation?,
+            Stand: Instance(Model)?
         }
     }
 }
