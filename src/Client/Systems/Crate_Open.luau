@@ -40,7 +40,7 @@ local Roll_Fish = require(ReplicatedStorage.Common.Modules.Roll_Fish)
 local Util = require(ReplicatedStorage.Common.Modules.Util)
 
 -- Configurable tunables
-local BASE_CYCLE_DURATION = 4 -- total cycle time (seconds)
+local BASE_CYCLE_DURATION = 1 -- total cycle time (seconds)
 local BASE_ROLL_INTERVAL = 0.1 -- starting time between rolls
 local BASE_ROLL_INCREMENT = 0.025 -- how much interval grows each roll (slowdown)
 
@@ -260,14 +260,14 @@ return {
 
                     Util.Tween_Model_Scale(0.5, END_SCALE * 1.5, FISH_Bounce_Tween_Info, Model)
 
-                    task.delay(2, function()
+                    task.delay(1, function()
                         if Result_Stand then
                             local Goal_CF = Result_Stand.Stand.Floor.Place_Attachment.WorldCFrame
                                 * Model.PrimaryPart.PivotOffset:Inverse()
 
                             -- Tween Info: duration, easing style, direction
                             local TweenInfoSettings = TweenInfo.new(
-                                3, -- Time (seconds)
+                                1, -- Time (seconds)
                                 Enum.EasingStyle.Sine, -- Easing style
                                 Enum.EasingDirection.Out, -- Easing direction
                                 0, -- Repeat count (0 = once)
@@ -304,7 +304,7 @@ return {
 
                     Debris:AddItem(NewPart, 3)
 
-                    task.delay(6, function()
+                    task.delay(2, function()
                         local Part = Instance.new("Part")
                         Part.Transparency = 1
                         Part.CFrame = Model:GetPivot() * CFrame.new(0, 4.5, 0)

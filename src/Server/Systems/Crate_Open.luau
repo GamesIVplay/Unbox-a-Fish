@@ -201,7 +201,7 @@ return {
                 },
             })
 
-            task.delay(10.5, function()
+            task.delay(3.5, function()
                 if not World:contains(Crate_Entity) or not World:contains(Plot_Owner) then
                     return
                 end
