@@ -24,7 +24,7 @@ local Rebirths: { Rebirth } = {
     },
     [2] = {
         Requirements = {
-            Cash = 500000,
+            Cash = 5000000,
             Fish = { "Trulimero Trulicina", "Trippi Troppi" },
         },
         Rewards = {
@@ -34,7 +34,7 @@ local Rebirths: { Rebirth } = {
     },
     [3] = {
         Requirements = {
-            Cash = 1000000,
+            Cash = 10000000,
             Fish = { "Zibra Zubra Zibralini", "Pipi Avocado" },
         },
         Rewards = {
@@ -44,7 +44,7 @@ local Rebirths: { Rebirth } = {
     },
     [4] = {
         Requirements = {
-            Cash = 5000000,
+            Cash = 500000000,
             Fish = { "Pipi Kiwi", "Girafa Celeste" },
         },
         Rewards = {
@@ -54,7 +54,7 @@ local Rebirths: { Rebirth } = {
     },
     [5] = {
         Requirements = {
-            Cash = 10000000,
+            Cash = 1000000000,
             Fish = { "Bombardiro Crocodilo", "Bombombini Gusin" },
         },
         Rewards = {
