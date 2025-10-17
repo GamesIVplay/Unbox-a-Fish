@@ -15,7 +15,7 @@ local Rebirths: { Rebirth } = {
     [1] = {
         Requirements = {
             Cash = 100000,
-            Fish = { "Boneca Ambalabu", "Ta Ta Sahur" },
+            Fish = { "Boneca Ambalabu", "Tung Tung Sahur" },
         },
         Rewards = {
             Cash_Multiplier = 1.1,
@@ -25,7 +25,7 @@ local Rebirths: { Rebirth } = {
     [2] = {
         Requirements = {
             Cash = 500000,
-            Fish = { "Brr Brr Patapim", "Lirilli Larila", "Zibra Zubra Zibralini" },
+            Fish = { "Trulimero Trulicina", "Trippi Troppi" },
         },
         Rewards = {
             Cash_Multiplier = 1.2,
@@ -35,7 +35,7 @@ local Rebirths: { Rebirth } = {
     [3] = {
         Requirements = {
             Cash = 1000000,
-            Fish = { "Zibra Zubra Zibralini", "Bananita Dolfinita" },
+            Fish = { "Zibra Zubra Zibralini", "Pipi Avocado" },
         },
         Rewards = {
             Cash_Multiplier = 1.3,

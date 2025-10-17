@@ -58,7 +58,7 @@ local Crates: { [string]: Crate } = {
         Viewport_CFrame = CFrame.new(0.01, -2.5, -7)
             * CFrame.fromEulerAnglesYXZ(math.rad(0), math.rad(180), math.rad(0)),
         Fish = {
-            -- Commin
+            -- Common
             ["Trulimero Trulicina"] = 0.33,
             ["Trippi Troppi"] = 0.28,
             ["Brr Brr Patapim"] = 0.20,

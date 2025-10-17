@@ -61,7 +61,7 @@ local PLAYER_DATA_TEMPLATE: ProfileData = {
     Claimed_Group_Rewards = false,
 }
 
-local PlayerProfileStore = ProfileStore.New("Not_Main", PLAYER_DATA_TEMPLATE)
+local PlayerProfileStore = ProfileStore.New("Main", PLAYER_DATA_TEMPLATE)
 
 local Profiles: { [Player]: Profile } = {}
 
