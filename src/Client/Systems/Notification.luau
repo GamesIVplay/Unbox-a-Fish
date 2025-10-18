@@ -13,7 +13,7 @@ local Assets = ReplicatedStorage:WaitForChild("Assets")
 local Sounds = Assets:WaitForChild("Sounds")
 
 local UISounds = Sounds:WaitForChild("UI")
-local TypeWriter = UISounds:WaitForChild("TypeWriter") :: Sound
+local Notification_Sound = UISounds:WaitForChild("Notification")
 
 local Network = require(ReplicatedFirst.Network)
 
@@ -22,8 +22,7 @@ local Phases = require(ReplicatedStorage.Common.Phases)
 local Registry = require(ReplicatedStorage.Common.Registry)
 local World = require(ReplicatedStorage.Common.World)
 
-local DEFAULT_NOTIFICATION_DURATION = 2
-local TIME_PER_LETTER = 0.05
+local DEFAULT_NOTIFICATION_DURATION = 2.5
 
 local Notification_Query = World:query(Components.Text):with(Components.Tags.Notification):cached()
 
@@ -103,25 +102,11 @@ local function Create_Notifications()
 
         Notification.Parent = Notifications
 
+        Notification_Sound:Play()
+
         NotificationHaptic:Play()
 
-        task.spawn(function()
-            for i = 1, #Text do
-                if Notification.Parent ~= Notifications then
-                    return
-                end
-
-                Notification.Text = string.sub(Text, 1, i)
-
-                TypeWriter:Play()
-
-                task.wait(TIME_PER_LETTER)
-            end
-        end)
-
-        local Time_To_Type_Out = #Text * TIME_PER_LETTER
-
-        Debris:AddItem(Notification, Time_To_Type_Out + Duration)
+        Debris:AddItem(Notification, Duration)
 
         World:delete(Entity)
     end
