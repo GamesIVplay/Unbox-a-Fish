@@ -10,3 +10,4 @@ TODO.md
 dist/
 /*.rbxlx.lock
 /*.rbxl.lock
+network/
