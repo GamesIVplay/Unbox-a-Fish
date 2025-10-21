@@ -68,11 +68,12 @@ local function Update_Friend_Boosts()
 end
 
 local function Add_Badges(Player: Player)
-    BadgeService:AwardBadge(Player.UserId, Badges["Unbox"])
+    task.wait(1)
+    BadgeService:AwardBadge(Player.UserId, Badges["Fish!"])
     task.wait(1)
     BadgeService:AwardBadge(Player.UserId, Badges["A"])
     task.wait(1)
-    BadgeService:AwardBadge(Player.UserId, Badges["Fish!"])
+    BadgeService:AwardBadge(Player.UserId, Badges["Unbox"])
 end
 
 local function ConvertInventory(OldInventory)
