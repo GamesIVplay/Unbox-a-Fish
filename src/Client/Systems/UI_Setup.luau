@@ -399,6 +399,8 @@ local function Setup_Hotbar(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
             Network.Requests.EquipSlot.Fire(Num)
         end
     end)
+
+    Template.Visible = false
 end
 
 local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
@@ -422,6 +424,28 @@ local function Setup_Hud(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
     local OneTimeOffer = HUD:WaitForChild("OneTimeOffer")
 
     local AutoSwing = HUD:WaitForChild("AutoSwing")
+
+    local Disclaimer = HUD:WaitForChild("Disclaimer")
+
+    Scope:Hydrate(Disclaimer)({
+        Visible = Scope:Computed(function(Use)
+            if Use(Fusion_Values.Auto_Swing_Visible) or Use(Fusion_Values.Screen) ~= "HUD" then
+                return false
+            else
+                return true
+            end
+        end),
+    })
+
+    UserInputService.InputBegan:Connect(function(InputObject, GPE)
+        if GPE then
+            return
+        end
+
+        if InputObject.KeyCode == Enum.KeyCode.Backquote then
+            Fusion_Values.Screen:set("Items")
+        end
+    end)
 
     local Right = HUD:WaitForChild("Right")
     local Free_Reward = Right:WaitForChild("FreeReward") :: ImageButton
@@ -1565,7 +1589,7 @@ local function Setup_Notifications(LocalEntity: Types.Entity, PlayerGui: PlayerG
             if Use(Fusion_Values.Auto_Swing_Visible) then
                 return UDim2.fromScale(0.5, 0.76)
             else
-                return UDim2.fromScale(0.5, 0.83)
+                return UDim2.fromScale(0.5, 0.8)
             end
         end),
     })
@@ -1644,6 +1668,60 @@ local function Setup_Rebirth(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
         return true
     end)
 
+    local Fish_Percentage_Computed = Scope:Computed(function(Use)
+        local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+        local Inventory = Use(Fusion_Values.Inventory)
+
+        if not Next_Rebirth_Data then
+            return 0
+        end
+
+        local Required_Fish = Next_Rebirth_Data.Requirements.Fish
+        if not Required_Fish or #Required_Fish == 0 then
+            return 1
+        end
+
+        local Owned_Count = 0
+
+        for _, Name in Required_Fish do
+            for _, Item in Inventory do
+                if Item.Name == Name then
+                    Owned_Count += 1
+                    break
+                end
+            end
+        end
+
+        return math.clamp(Owned_Count / #Required_Fish, 0, 1)
+    end)
+
+    local Fish_Progress_Text_Computed = Scope:Computed(function(Use)
+        local Next_Rebirth_Data = Use(Next_Rebirth_Data_Computed)
+        local Inventory = Use(Fusion_Values.Inventory)
+
+        if not Next_Rebirth_Data then
+            return ""
+        end
+
+        local Required_Fish = Next_Rebirth_Data.Requirements.Fish
+        if not Required_Fish or #Required_Fish == 0 then
+            return "Owned"
+        end
+
+        local Owned_Count = 0
+
+        for _, Name in Required_Fish do
+            for _, Item in Inventory do
+                if Item.Name == Name then
+                    Owned_Count += 1
+                    break
+                end
+            end
+        end
+
+        return `{Owned_Count}/{#Required_Fish} Fish`
+    end)
+
     local Rebirth_Button_Text_Computed = Scope:Computed(function(Use)
         local Current_Rebirth = Use(Fusion_Values.Rebirth)
 
@@ -1710,6 +1788,26 @@ local function Setup_Rebirth(LocalEntity: Types.Entity, PlayerGui: PlayerGui)
 
     Scope:Hydrate(Rebirth_Cash_Progress)({
         Text = Cash_Progress_Text_Computed,
+    })
+
+    local Fish_Progress = HUD:WaitForChild("Fish_Progress") :: Frame
+    local Fish_Progress_Inside = Fish_Progress:WaitForChild("Inside")
+    local Fish_Progress_Text = Fish_Progress:WaitForChild("Title")
+
+    Scope:Hydrate(Fish_Progress)({
+        Visible = Scope:Computed(function(Use)
+            return Use(Fusion_Values.Screen) == "HUD"
+        end),
+    })
+
+    Scope:Hydrate(Fish_Progress_Inside)({
+        Size = Scope:Tween(Scope:Computed(function(Use)
+            return UDim2.fromScale(Use(Fish_Percentage_Computed), 1)
+        end)),
+    })
+
+    Scope:Hydrate(Fish_Progress_Text)({
+        Text = Fish_Progress_Text_Computed,
     })
 
     local Rebirth_Button = HUD:WaitForChild("Rebirth") :: ImageButton
