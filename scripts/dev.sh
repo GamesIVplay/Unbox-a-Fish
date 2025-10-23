@@ -2,14 +2,16 @@
 
 set -e
 
-# If Packages aren't installed, install them.
-if [ ! -d "Packages" ]; then
-    sh scripts/installPackages.sh
+# If network isn't compiled, exit
+if [ ! -d "network" ]; then
+    echo "Network folder missing. Exiting."
+    exit 1
 fi
 
-# If network isn't compiled, compile it
-if [ ! -d "network" ]; then
-    sh scripts/blink.sh
+# If Packages aren't installed, exit
+if [ ! -d "Packages" ]; then
+    echo "Packages folder missing. Exiting."
+    exit 1
 fi
 
 rojo sourcemap default.project.json -o sourcemap.json
