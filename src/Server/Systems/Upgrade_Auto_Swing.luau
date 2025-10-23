@@ -25,8 +25,8 @@ local World = require(ReplicatedStorage.Common.World)
 local Ratelimit = require(ReplicatedStorage.Packages.Ratelimit)
 local Upgrade_Rate_Limit = Ratelimit(1, 0.5)
 
-local Colors = require(ReplicatedStorage.Common.Modules.Colors)
 local Auto_Swing_Upgrades = require(ReplicatedStorage.Common.Modules.AutoSwing_Upgrades)
+local Colors = require(ReplicatedStorage.Common.Modules.Colors)
 
 return {
     name = script.Name,
@@ -57,7 +57,9 @@ return {
 
             local Auto_Swing_Level = World:get(Player_Entity, Components.Auto_Swing_Level)
 
-            local Next_Upgrade_Price = Auto_Swing_Upgrades[Auto_Swing_Level + 1].Price
+            local Next_Upgrade_Price = Auto_Swing_Upgrades[Auto_Swing_Level + 1]
+                    and Auto_Swing_Upgrades[Auto_Swing_Level + 1].Price
+                or nil
 
             if not Next_Upgrade_Price then
                 Network.Notification.Fire(Player, {

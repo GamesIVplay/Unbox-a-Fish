@@ -63,17 +63,41 @@ local function Update_Friend_Boosts()
             end
         end
 
+        if not World:contains(PlayerEntity) then
+            continue
+        end
+
         World:set(PlayerEntity, Components.FriendBoost, (Friends * 0.1) + 1)
     end
 end
 
+
+local To_Award = {
+    Badges["Fish!"],
+    Badges.A,
+    Badges.Unbox
+}
+
 local function Add_Badges(Player: Player)
     task.wait(1)
-    BadgeService:AwardBadge(Player.UserId, Badges["Fish!"])
-    task.wait(1)
-    BadgeService:AwardBadge(Player.UserId, Badges["A"])
-    task.wait(1)
-    BadgeService:AwardBadge(Player.UserId, Badges["Unbox"])
+
+    for name, id in pairs(To_Award) do
+        local success, hasBadge = pcall(function()
+            return BadgeService:UserHasBadgeAsync(Player.UserId, id)
+        end)
+
+        if success then
+            if not hasBadge then
+                pcall(function()
+                    BadgeService:AwardBadge(Player.UserId, id)
+                end)
+            end
+        else
+            warn("Failed to check badge: " .. name)
+        end
+
+        task.wait(1) 
+    end
 end
 
 local function ConvertInventory(OldInventory)
@@ -318,7 +342,7 @@ local function Handle_Leaving_Players()
 
         Registry.Delete("Players", Player)
 
-        Update_Friend_Boosts()
+        task.spawn(Update_Friend_Boosts)
     end
 end
 

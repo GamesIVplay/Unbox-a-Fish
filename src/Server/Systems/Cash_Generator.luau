@@ -42,8 +42,21 @@ return {
         do
             local Owner_Entity = World:target(Fish_Entity, Components.Relationships.Owner)
 
+            if not Owner_Entity then
+                continue
+            end
+
             local Rebirth = World:get(Owner_Entity, Components.Rebirth)
+
+            if not Rebirth then
+                continue
+            end
+
             local FriendBoost = World:get(Owner_Entity, Components.FriendBoost)
+
+            if not FriendBoost then
+                continue
+            end
 
             local Mutation = World:get(Fish_Entity, Components.Mutation)
 
