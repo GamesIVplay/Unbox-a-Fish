@@ -1,3 +1,4 @@
+local AnalyticsService = game:GetService("AnalyticsService")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -126,6 +127,8 @@ return {
 
             Network.Notification.Fire(Player, { Text = `You rebirthed to rebirth {Rebirth + 1}` })
             Network.Confetti.Fire(Player)
+
+            AnalyticsService:LogCustomEvent(Player, "Rebirth", Rebirth + 1)
         end
     end,
     runConditions = {},
